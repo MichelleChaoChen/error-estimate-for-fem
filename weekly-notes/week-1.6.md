@@ -10,7 +10,7 @@ Parts of the meetings:
 1. What error to use?
     - Energy norm? 
 2. What problem do we want to solve? 
-    - $- \Delta \cdot (k(x)\Delta u) = f$?
+    - $- \nabla \cdot (k(x)\nabla u) = f$?
 3. What basis functions to use?
     - Linear? 
 4. What source functions to use? 
