@@ -1,0 +1,43 @@
+Introduction - No changes.
+
+Section 2 - Added a little introduction for clarity. 
+
+2.1 - Expanded explanation of derivation of the weak form (Alexander's feedback),
+corrected error notation to make it consistent: e to e_h.  
+
+2.2 - Small rewriting of some sentences I found vague: 
+-Deleted "Since the goal is to estimate error without ... more useful" as we have already stated that in comparing a priori and a posteriori methods.
+-Changed "that are proved to be working" to "verified using numerical experiments", citations that back up this point would be useful.
+-Defined E_h.
+-Gamma needs to be defined, I added a comment.
+
+Section 2.2.2 needs work, namely: an explicit statement of the method (ie a formula), and a statement that the solution is not guaranteed, as well as a source to back this up.
+
+2.2.3 - added a little concluding statement, to lead into 2.3.
+
+2.3 - changed algorithm into algorithm environment, added citations and a review of the convergence of the methods (which is important for some of the papers we review later), still need to wrap up the mini-conclusion/transition.
+
+Section 3 - Changed h_k to phi_k to avoid confusion between the diameter of the element and the activation function. (eq. 19)
+3.1 (These are the big changes)
+
+-Added the review of optimal hp refinement using a DNN in the same section as "Optimal Mesh refinement strategies with RNN", so as to group the papers thematically. The order is RNN first, then optimal hp refinement, as the second paper is more relevant (uses local data). 
+
+3.2 - no changes, although I couldn't find a way to group it convincingly into a thematic section. Ideas here are welcome. 
+
+3.3 - New thematic section, specifically on a posteriori error estimation using NN. 
+I'm thinking of renaming the section to "Recovery Based a posteriori error estimation using NN" as the papers there deal with that approach. I grouped sections 3.3 and 3.4 together and added a linking paragraph between both reviews. 
+
+I also changed the output vector fo the Oishi paper, added some more details (inserted two graphs and mentioned that method B is more accurate) as this paper is very relevant to us. Deleted the first paragraph of what used to be section 3.4 (Stress recovery in adaptive...) as it has been discussed in section 2 already. (I left the original text as a comment though). 
+
+3.4 - MeshingNet
+
+No changes, although I think we can merge this paper into section 3.1 as it outputs a mesh, not a solution. 
+
+
+Conclusion- still to be written (by me), the scientific gap we found is that there are no error estimates in the energy norm.  
+
+
+
+Main thing to be discussed is whether the flow if the paper makes sense, if not we can always change it back. 
+
+All these changes may be confirmed against the last version of the literture reviews sent on whatsapp on Tuesday.
