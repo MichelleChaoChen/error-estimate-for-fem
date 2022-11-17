@@ -1,0 +1,11 @@
+Solves 1D Poisson problem -u_xx = f,
+x in [0, 1], with Dirichlet B.C.s u(0)=0, u(1)=0.
+Alternatively, Neumann BC: u(0)=0, u_x(1) = q
+Uses hat linear basis functions.
+
+For this problem the Galerkin method will be nodally exact following 
+[The finite element method : linear static and dynamic finite element analysis]. 
+
+Extensions:
+-Different problem.
+-Maybe trig source functions.
