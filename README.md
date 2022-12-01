@@ -7,6 +7,6 @@ The trained model will be stored in the **src/models** folder
 
 To run the code 
 ```
-python main.py --model "path to your model"
+python main.py --model "path to your model" --epochs num_epochs
 ```
 Where your model must be of the extension .ckpt
