@@ -14,8 +14,17 @@ import post
 
 # Generate mesh on which to solve
 N_intervals = 10
-xgrid = np.linspace(0, 1, N_intervals)
+kind = 'rand'
+if kind == 'rand':
+    finegrid = np.linspace(0, 1, N_intervals*3)
+    xgrid = np.sort(np.random.choice(finegrid[10:], size=N_intervals, replace=False))
+    xgrid = np.append(xgrid, 1)
+    xgrid = np.insert(xgrid, 0, 0)
+else: 
+    xgrid = np.linspace(0, 1, N_intervals)
+print(xgrid)
 neu = random.uniform(-5, 5)
+
 
 # Generate source
 trig_degree = 10
@@ -40,5 +49,5 @@ residual = post_pos.residual_err()
 data = post_pos.gendata(400)
 
 plt.plot(xfine, u_exact, linewidth = 5)
-plt.plot(xgrid, u_sol, 'r.-')
+plt.plot(xgrid, u_sol, 'ro-', linewidth = 2, markersize = 4)
 plt.show()

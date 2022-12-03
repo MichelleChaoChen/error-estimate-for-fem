@@ -40,7 +40,7 @@ class source:
         Returns:
             Source function
         """        
-        neu = self.deg * 8
+        
         # Make sure coeff arr does not get overwritten
         if not hasattr(self, 'coeff_arr') or NEW_COEFF:
             self.coeff_arr = np.array([16*np.pi*(2*i+1) for i in range(self.deg)])
