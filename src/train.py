@@ -1,3 +1,4 @@
+import os
 import argparse
 import numpy as np
 import pandas as pd
@@ -70,7 +71,7 @@ def main(args):
     data = pd.read_csv(args.data, sep=",", header=None)
 
     error_estimate_model = NeuralNetwork(data, int(args.epochs))
-    error_estimate_model.save(args.data.split("/")[-1].split(".")[0])
+    error_estimate_model.save(os.path.basename(args.data).split('.')[0])
 
 
 if __name__ == '__main__':

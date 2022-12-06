@@ -202,7 +202,7 @@ def genData(N_elements, sourceFunc, neu, sampling_freq, degree_fourier=10):
     data = np.transpose(data)
     #print(data)
     
-    with open("tan_and_michelles_data_file_three_features_fem_solver_written_by_a_bad_programmer.csv", "ab") as f:
+    with open("features.csv", "ab") as f:
         np.savetxt(f, data, delimiter=",")
 
     # =============================================================================
