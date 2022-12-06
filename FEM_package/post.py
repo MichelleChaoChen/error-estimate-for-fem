@@ -63,8 +63,8 @@ class post:
         return (self.gradTrigError(xi*self.hs + self.xgrid[:-1])-self.grad_fem)**2 * self.hs
 
     def energy(self):
-        self.energy = integrate.quad_vec(self.errorMaster, 0, 1)[0]
-        self.energy_norm = np.sqrt(self.energy)
+        self.energy_squared = integrate.quad_vec(self.errorMaster, 0, 1)[0]
+        self.energy_norm = np.sqrt(self.energy_squared)
         return self.energy_norm
     
     def residual_err(self):
@@ -78,8 +78,25 @@ class post:
         jump_right = np.append(jump_right, self.neu-self.grad_fem[-1])
         self.jump_sq = jump_left*jump_left + jump_right*jump_right
         return self.jump_sq
+    
+    def grad(self, x):
+        
+        x_midpoint = (self.xgrid[:-1] + self.xgrid[1:]) / 2
+        
+        coeff = np.polyfit(x_midpoint, self.grad_fem, 2)
 
-    def gendata(self, sampling_freq):
+        return np.polyval(coeff, x)
+
+    def errorMasterRecovery(self, xi):
+        return (self.grad(xi*self.hs + self.xgrid[:-1])-self.grad_fem)**2 * self.hs
+
+    def energyRecovery(self):
+        self.energy_squared_recovery = integrate.quad_vec(self.errorMasterRecovery, 0, 1)[0]
+        self.energy_norm_recovery = np.sqrt(self.energy_squared_recovery)
+        return self.energy_norm_recovery
+        
+
+    def gendata(self, sampling_freq, frac):
         """generate data
 
         Args:
@@ -88,20 +105,34 @@ class post:
         Returns:
             np.array: data
         """        
-        hs_im1 = self.hs[0:-2:sampling_freq]
+
+        x_sample_source = np.tile(frac, (len(self.xgrid),1))
+        hs_copy = np.append(self.hs, 1)
+        x_copy = self.xgrid.copy()
+        x_copy = np.reshape(x_copy, (len(self.xgrid), 1))
+        
+        x_sample_source = x_sample_source * hs_copy[:, np.newaxis]
+        x_sample_source = x_sample_source + x_copy
+        x_sample_source = x_sample_source.flatten()
+        
+        f_samples = self.sourceFunc(x_sample_source)
+        f_samples = np.reshape(f_samples, (len(self.xgrid), len(frac)))[:-1]
         hs_i = self.hs[1:-1:sampling_freq]
-        hs_ip1 = self.hs[2::sampling_freq]
+
+        f_im1 = f_samples[0:-2:sampling_freq]
+
+        f_i = f_samples[1:-1:sampling_freq]
+        f_ip1 = f_samples[2::sampling_freq]
         
-        res_im1 = self.residual_norm[0:-2:sampling_freq]
-        res_i = self.residual_norm[1:-1:sampling_freq]
-        res_ip1 = self.residual_norm[2::sampling_freq]
+        grad_im1 = self.grad_fem[0:-2:sampling_freq]
+        grad_i = self.grad_fem[1:-1:sampling_freq]
+        grad_ip1 = self.grad_fem[2::sampling_freq]
         
-        jump_im1 = self.jump_sq[0:-2:sampling_freq]
-        jump_i = self.jump_sq[1:-1:sampling_freq]
-        jump_ip1 = self.jump_sq[2::sampling_freq]
-        
-        data = np.vstack((hs_im1, hs_i, hs_ip1, res_im1, res_i, res_ip1, jump_im1, jump_i, jump_ip1, self.energy[1:-1:sampling_freq]))
+        data = np.vstack((hs_i, grad_im1, grad_i, grad_ip1, self.energy_norm[1:-1:sampling_freq]))
         data = np.transpose(data)
+        data = np.hstack((f_im1, f_i, f_ip1, data))
+
+        #data = np.hstack((hs_i.reshape(len(hs_i), 1), data))
         return data
 
 

@@ -21,7 +21,7 @@ class source:
         if not hasattr(self, 'coeff_arr') or NEW_COEFF:
             self.coeff_arr = np.random.uniform(-bound, bound, self.deg)
             NEW_COEFF = False
-   
+        self.coeff_arr = np.arange(1, 11)
         sin_arr = np.zeros((self.deg, len(x)))
         for i in range(self.deg):
             sin_arr[i] = np.sin((i+1)*np.pi*x)
