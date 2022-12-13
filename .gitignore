@@ -1,3 +1,6 @@
 .DS_Store
 .idea/
 src/__pycache__ 
+src/data
+src/model
+src/*.svg
