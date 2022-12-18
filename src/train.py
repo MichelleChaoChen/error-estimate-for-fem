@@ -14,12 +14,18 @@ from keras import layers
 class NeuralNetwork:
     def __init__(self, dataset, epochs):
         self.features, self.labels = self.get_attr(dataset)
-        self.train_features, self.test_features, \
-            self.train_labels, self.test_labels = train_test_split(self.features, self.labels, test_size=0.2)
-
+        self.train_features, self.test_features, self.train_labels, \
+            self.test_labels = train_test_split(self.features, self.labels, test_size=0.2)
+        self.tuner = kt.Hyperband(self.build_model,
+                                  objective='val_loss',
+                                  max_epochs=10,
+                                  factor=3,
+                                  directory='hyperparameters',
+                                  project_name='tuning_log')
+        print("START TUNING")
+        best_hps = self.tune_model()
         print("START TRAINING")
-        self.model = self.train(epochs)
-        # self.tune_model()
+        self.model = self.train(best_hps, epochs)
         print("START EVALUATING")
         self.evaluate()
 
@@ -54,44 +60,20 @@ class NeuralNetwork:
         )
         return model
 
-    def train(self, epochs=100):
-        feature_normalizer = layers.Normalization(
-            input_shape=self.train_features[0].shape,
-            axis=-1
-        )
-        feature_normalizer.adapt(self.train_features)
-        model = keras.Sequential()
-        model.add(feature_normalizer)
-        model.add(layers.Dense(units=215, activation='relu'))
-        model.add(layers.Dense(units=507, activation='relu'))
-        model.add(layers.Dense(units=243, activation='relu'))
-        model.add(layers.Dense(units=74, activation='relu'))
-        model.add(layers.Dense(units=159, activation='relu'))
-        model.add(layers.Dense(units=402, activation='relu'))
-        model.add(layers.Dense(units=1))
-        lr = 0.0037830047995581683
-        model.compile(
-            loss='mean_squared_error',
-            optimizer=tf.keras.optimizers.Adam(learning_rate=lr)
-        )
+    def train(self, best_hps, epochs=100):
+        model = self.tuner.hypermodel.build(best_hps)
         model.fit(self.train_features, self.train_labels, epochs=epochs,
                   validation_split=0.2, verbose=2)
         return model
 
     def tune_model(self):
         self.build_model(kt.HyperParameters())
-        tuner = kt.Hyperband(self.build_model,
-                             objective='val_loss',
-                             max_epochs=10,
-                             factor=3,
-                             directory='model',
-                             project_name='hyperparams')
         stop_early = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=5)
-        tuner.search(self.train_features, self.train_labels, validation_split=0.2, callbacks=[stop_early])
-        best_hps = tuner.get_best_hyperparameters(1)[0]
-        best_model = tuner.get_best_models(num_models=2)[0]
+        self.tuner.search(self.train_features, self.train_labels,
+                          validation_split=0.2, callbacks=[stop_early])
+        best_hps = self.tuner.get_best_hyperparameters(1)[0]
+        best_model = self.tuner.get_best_models(num_models=2)[0]
         best_model.summary()
-        print(best_hps.values)
         return best_hps
 
     def plot_training_loss(self, history):
