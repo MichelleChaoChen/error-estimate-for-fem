@@ -171,3 +171,7 @@ def adaptive_mesh_refinement():
         local_error, error = get_error_estimate(features)
         mesh = refine(mesh, local_error, error)
     return solution
+
+
+if __name__ == '__main__':
+    adaptive_mesh_refinement()
