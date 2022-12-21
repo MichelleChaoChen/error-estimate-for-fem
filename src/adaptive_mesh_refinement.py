@@ -61,7 +61,7 @@ def get_features(func, xgrid, u_fem, frac=[0.25, 0.5, 0.75]):
     hs = hs[1:-1]
     f_sample = sampleSource(func, xgrid, frac)
     g_sample = gradient(u_fem, xgrid)
-    data = np.hstack((f_sample, g_sample, hs))
+    data = np.hstack((hs, f_sample, g_sample))
     return data
 
 
