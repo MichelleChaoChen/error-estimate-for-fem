@@ -5,14 +5,9 @@ import keras
 import numpy as np
 from functools import partial
 import matplotlib.pyplot as plt
-import ufl
-
-from dolfinx import fem, io, mesh, plot
-from ufl import ds, dx, grad, inner, sin, cos
-
-from mpi4py import MPI
-from petsc4py.PETSc import ScalarType
-
+import source
+import solver as own_solver
+import post
 def get_error_estimate(features):
     nn_fine = keras.models.load_model("models/fine_training_scaled.ckpt")
     nn_coarse = keras.models.load_model("models/coarse_training_scaled.ckpt")
@@ -117,63 +112,25 @@ def f_exp(a_k, freq, x):
         f += a_k[i] * np.sin(freq[i] * x)
     return f
 
-
-def exact_sol(x, a_k, freq, bc_1):
-    result = bc_1 * x
-    # C_1 = bc_1 - np.sum((a_k / freq**2) * np.sin(freq))
-
+def exact_sol(x, a_k, freq, neu):
+    C_1 = neu - np.sum((a_k / freq) * np.cos(freq))
+    result = C_1 * x
     for i in range(len(a_k)):
-        result += (a_k[i] / freq[i]**2) * np.sin(freq[i] * x) 
+        result += (a_k[i] / freq[i]**2) * np.sin(freq[i] * x)  
     return result
 
+def solver(mesh_new, deg, f_source_func, neu):
+    xgrid = mesh_new
+    # Generate source
+   # Store coefficients of source
 
-
-def solver(mesh_new, dirichletBC, f_str):
-    # Define domain
-    x_start = 0.0
-    x_end = 1.0
-
-    # Create mesh
-    N = len(mesh_new)
-
-    cell = ufl.Cell("interval", geometric_dimension=2)
-    domain = ufl.Mesh(ufl.VectorElement("Lagrange", cell, 1))
-
-    x = np.stack((mesh_new, np.zeros(N)), axis=1)
-    cells = np.stack((np.arange(N - 1), np.arange(1, N)), axis=1).astype("int32")
-    msh = mesh.create_mesh(MPI.COMM_WORLD, cells, x, domain)
-
-    # Define functionspace
-    V = fem.FunctionSpace(msh, ("Lagrange", 1))
-
-    # Define boundary conditions
-    facets = mesh.locate_entities_boundary(msh, dim=0, marker=lambda x: np.logical_or(np.isclose(x[0], x_start),
-                                                                                      np.isclose(x[0], x_end)))
-
-    dofs1 = fem.locate_dofs_topological(V=V, entity_dim=0, entities=facets[0])
-    dofs2 = fem.locate_dofs_topological(V=V, entity_dim=0, entities=facets[1])
-
-    bc1 = fem.dirichletbc(value=ScalarType(0), dofs=dofs1, V=V)
-    bc2 = fem.dirichletbc(value=ScalarType(dirichletBC), dofs=dofs2, V=V)
-
-    # Define trial and test functions and assign coördinates on mesh
-    u = ufl.TrialFunction(V)
-    v = ufl.TestFunction(V)
-    x = ufl.SpatialCoordinate(msh)
-
-    # Call and evaluate source function over domain
-    f = eval(f_str)
-
-    # Define problem
-    a = inner(grad(u), grad(v)) * dx
-    L = inner(f, v) * dx
-
-    # Solve problem
-    problem = fem.petsc.LinearProblem(a, L, bcs=[bc1, bc2], petsc_options={"ksp_type": "preonly", "pc_type": "lu"})
-    uh = problem.solve()
-
-    return uh.x.array
-
+    # Solver
+    solver_solve = own_solver.solver(xgrid, None, f_source_func)  # Setup solver
+    solver_solve.assembleFEMVec()                                       # Assemble matrix A
+    solver_solve.assembleRHSVec(neu)                                    # Assemble RHS
+    u_sol = solver_solve.solve()  
+        
+    return u_sol
 
 def refine(mesh, err_pred, global_error):
     #mesh = mesh[1:len(mesh) - 1]
@@ -203,32 +160,32 @@ def refine(mesh, err_pred, global_error):
 
 def adaptive_mesh_refinement():
     mesh = np.linspace(0, 1, 9)
-    source_func_temp = f_str(1000, 50, 1)
+    source_func_temp = f_str(1000, 15, 3)
     source_func_str = source_func_temp[0]
     source_func = partial(f_exp, source_func_temp[1], source_func_temp[2])
-    bc = np.random.uniform(-10, 10)
-    bc = 0
     tolerance = 1e-3
     error = 1 << 20
     iter = 0
-    x = np.linspace(0, 1, 10000)
-    exact = exact_sol(x,  source_func_temp[1], source_func_temp[2], bc)
+    neu = np.random.uniform(-500, 500)
+    x = np.linspace(0, 1, 100000)
+    u_exact = exact_sol(x, source_func_temp[1], source_func_temp[2], neu)
     while error > tolerance:
         iter += 1
-        solution = solver(mesh, bc, source_func_str)
+        solution = solver(mesh, 10, source_func, neu)
         features = get_features(source_func, mesh, solution)
         local_error, error = get_error_estimate(features)
         print(" ERROR ", error)
         plt.figure()
         plt.title(f"Iteration: {iter}, Error: {error}")
+        plt.plot(x, u_exact)
         plt.plot(mesh, solution, 'r.-')
-        plt.plot(x, exact)
-        plt.savefig(f"Iteration {iter}")
-        if iter >= 10:
-            break
+
+        plt.savefig(f"OWN: Iteration {iter}")
         mesh = refine(mesh, local_error, error)
         
     return solution
 
 if __name__ == '__main__':
     adaptive_mesh_refinement()
+
+
