@@ -52,7 +52,7 @@ class NeuralNetwork:
             )
         if hp.Boolean("dropout"):
             model.add(layers.Dropout(rate=0.25))
-        model.add(layers.Dense(1))
+        model.add(layers.Dense(1, activation='softplus'))
         lr = hp.Float("lr", min_value=1e-4, max_value=1e-2, sampling="log")
         model.compile(
             loss='mean_squared_error',
