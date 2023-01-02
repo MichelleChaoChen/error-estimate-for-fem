@@ -14,11 +14,6 @@ from mpi4py import MPI
 from petsc4py.PETSc import ScalarType
 
 
-from matplotlib import cm
-from matplotlib.colors import Normalize 
-from scipy.interpolate import interpn
-
-
 def get_error_estimate(features):
     nn_fine = keras.models.load_model("models/Fine_NU_U_HF3GF3J2_logerr_base20_train.ckpt")
     nn_coarse = keras.models.load_model("models/Coarse_NU_U_HF3GF3J2_logerr_base20_train.ckpt")
@@ -215,25 +210,6 @@ def refine(mesh, err_pred, global_error):
             refined_mesh.pop()
     return np.array(refined_mesh)
 
-def density_scatter( x , y, iter, ax = None, bins=20)   :
-    """
-    Scatter plot colored by 2d histogram
-    """
-    if ax is None :
-        fig , ax = plt.subplots()
-    data , x_e, y_e = np.histogram2d( x, y, bins = bins )
-    z = interpn( ( 0.5*(x_e[1:] + x_e[:-1]) , 0.5*(y_e[1:]+y_e[:-1]) ) , data , np.vstack([x,y]).T , method = "splinef2d", bounds_error = False)
-
-    # Sort the points by density, so that the densest points are plotted last
-    if False :
-        idx = z.argsort()
-        x, y, z = x[idx], y[idx], z[idx]
-
-    #To be sure to plot all data
-    z[np.where(np.isnan(z))] = 0.0
-    ax.scatter(x, iter * np.ones(len(x)), c= z, cmap='rainbow')
-    
-    return ax, z
 
 def adaptive_mesh_refinement():
     color=True  # Expensive but nice
