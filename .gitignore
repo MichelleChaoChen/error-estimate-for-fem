@@ -4,3 +4,4 @@ src/__pycache__
 src/data
 src/hyperparameters
 src/*.svg
+.devcontainer
