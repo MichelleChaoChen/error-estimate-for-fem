@@ -40,8 +40,6 @@ def get_error_estimate(features, nn_fine, nn_coarse):
     local_errors = np.zeros(len(features))
     local_errors[fine_separation] = fine_error
     local_errors[~fine_separation] = coarse_error
-    local_errors = np.insert(local_errors, 0, local_errors[0])
-    local_errors = np.append(local_errors, local_errors[-1])
 
     global_error = np.linalg.norm(np.array(local_errors))
     return local_errors, global_error
@@ -59,6 +57,24 @@ def relative_change(grad_new, grad_old):
 def generate_data(new_sol, new_grid, old_sol, old_grid):
     # Step size: x_i+1 - x_i
     old_step = old_grid[1:] - old_grid[:-1]
+    new_step = new_grid[1:] - new_grid[:-1]
+
+    # Extend boundary on the old mesh
+    virtual_point_old_left = (old_sol[0] - (old_sol[1] - old_sol[0]))
+    old_sol = np.insert(old_sol, 0, virtual_point_old_left)
+    old_grid = np.insert(old_grid, 0, old_grid[0] - old_step[0])
+    virtual_point_old_right = (old_sol[-1] + old_sol[-1] - old_sol[-2])
+    old_sol = np.append(old_sol, virtual_point_old_right)
+    old_grid = np.append(old_grid, old_grid[-1] + old_step[-1])
+    old_step = old_grid[1:] - old_grid[:-1]
+
+    # Extend boundary on the new mesh
+    virtual_point_new_left = (new_sol[0] - (new_sol[1] - new_sol[0]))
+    new_sol = np.insert(new_sol, 0, virtual_point_new_left)
+    new_grid = np.insert(new_grid, 0, new_grid[0] - new_step[0])
+    virtual_point_new_right = (new_sol[-1] - (new_sol[-1] - new_sol[-2]))
+    new_sol = np.append(new_sol, virtual_point_new_right)
+    new_grid = np.append(new_grid, new_grid[-1] + new_step[-1])
     new_step = new_grid[1:] - new_grid[:-1]
 
     hs = {"i-1": new_step[0:-2], "i": new_step[1:-1], "i+1": new_step[2:]}
@@ -253,7 +269,7 @@ def adaptive_mesh_refinement(tolerance, max_iter):
     error = 1 << 20
     N_elements = []
 
-    source_func_temp = f_str(1000, 40, 2)
+    source_func_temp = f_str(1000, 30, 3)
     source_func_str = source_func_temp[0]
 
     solution_coarse = solver(mesh_coarse, bc, source_func_str)
