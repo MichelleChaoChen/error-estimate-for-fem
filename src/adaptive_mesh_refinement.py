@@ -109,8 +109,8 @@ def generate_data(new_sol, new_grid, old_sol, old_grid):
 
 # Function that creates random sourcefunction
 def f_str(coeff_range, freq_range, N):
-    a_k = np.random.uniform(-coeff_range, coeff_range, N)
-    freq = np.pi * np.random.randint(1, freq_range, N)
+    a_k = np.random.uniform(coeff_range-1, coeff_range, N)
+    freq = np.pi * np.random.randint(freq_range-1, freq_range, N)
     my_string = ''
     for i in range(N):
         string = "%s*sin(%s*x[0])" % (str(a_k[i]), str(freq[i]))
@@ -269,7 +269,7 @@ def adaptive_mesh_refinement(tolerance, max_iter):
     error = 1 << 20
     N_elements = []
 
-    source_func_temp = f_str(1000, 30, 3)
+    source_func_temp = f_str(30_000**2, 30_000, 3)
     source_func_str = source_func_temp[0]
 
     solution_coarse = solver(mesh_coarse, bc, source_func_str)
@@ -312,5 +312,5 @@ def adaptive_mesh_refinement(tolerance, max_iter):
 
 if __name__ == '__main__':
     tolerance = 1e-2
-    max_iter = 100
+    max_iter = 13
     adaptive_mesh_refinement(tolerance, max_iter)

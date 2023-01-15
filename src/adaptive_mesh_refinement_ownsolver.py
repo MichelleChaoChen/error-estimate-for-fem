@@ -94,8 +94,8 @@ def get_features(func, xgrid, u_fem, frac=[0.25, 0.5, 0.75]):
 
 # Function that creates random sourcefunction
 def f_str(coeff_range, freq_range, N):
-    a_k = np.random.uniform(-coeff_range, coeff_range, N)
-    freq = np.pi * np.random.randint(1, freq_range, N)
+    a_k = np.random.uniform(coeff_range-1, coeff_range, N) * np.pi*np.pi
+    freq = np.pi * np.random.randint(freq_range-1, freq_range, N)
     my_string = ''
     for i in range(N):
         string = "%s*sin(%s*x[0])" % (str(a_k[i]), str(freq[i]))
@@ -158,18 +158,18 @@ def refine(mesh, err_pred, global_error):
     return np.array(refined_mesh)
 
 
-def adaptive_mesh_refinement():
+def adaptive_mesh_refinement(max_iter):
     mesh = np.linspace(0, 1, 9)
-    source_func_temp = f_str(1000, 15, 3)
+    source_func_temp = f_str(30000**2, 30_000, 1)
     source_func_str = source_func_temp[0]
     source_func = partial(f_exp, source_func_temp[1], source_func_temp[2])
     tolerance = 1e-3
     error = 1 << 20
     iter = 0
-    neu = np.random.uniform(-500, 500)
+    neu = np.random.uniform(-500, 500)*0
     x = np.linspace(0, 1, 100000)
     u_exact = exact_sol(x, source_func_temp[1], source_func_temp[2], neu)
-    while error > tolerance:
+    while error > tolerance and iter < max_iter:
         iter += 1
         solution = solver(mesh, 10, source_func, neu)
         features = get_features(source_func, mesh, solution)
@@ -186,6 +186,7 @@ def adaptive_mesh_refinement():
     return solution
 
 if __name__ == '__main__':
-    adaptive_mesh_refinement()
+    max_iter = 15
+    adaptive_mesh_refinement(max_iter)
 
 

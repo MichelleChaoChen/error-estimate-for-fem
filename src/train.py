@@ -35,6 +35,10 @@ class NeuralNetwork:
 
         return features, labels
 
+    def custom_loss(self, y_true, y_pred):
+        loss = tf.norm((y_true - y_pred) / y_true)
+        return loss
+
     def build_model(self, hp):
         model = keras.Sequential()
         feature_normalizer = layers.Normalization(
@@ -55,7 +59,7 @@ class NeuralNetwork:
         model.add(layers.Dense(1, activation='softplus'))
         lr = hp.Float("lr", min_value=1e-4, max_value=1e-2, sampling="log")
         model.compile(
-            loss='mean_squared_error',
+            loss=self.custom_loss,
             optimizer=tf.keras.optimizers.Adam(learning_rate=lr)
         )
         return model
@@ -91,7 +95,7 @@ class NeuralNetwork:
 
     def save(self, name):
         if self.model is not None:
-            self.model.save("models/" + name + ".ckpt")
+            self.model.save("models/" + name + ".h5")
 
 
 def main(args):
