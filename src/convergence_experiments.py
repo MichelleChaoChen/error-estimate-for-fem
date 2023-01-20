@@ -292,7 +292,7 @@ def adaptive_mesh_refinement(tolerance, max_iter, bc, source_func_temp, error_es
         est_global_errors.append(error)
         ex_global_errors.append(ex_global_error)
 
-        mesh = refine(mesh, local_error, error)
+        mesh = refine(mesh, local_error, tolerance)
 
     return x, solution_exact, meshes, solutions, est_global_errors, ex_global_errors, N_elements
 
@@ -470,7 +470,7 @@ def convergence_experiments(tolerance, max_iter):
 
 
 if __name__ == '__main__':
-    tolerance = 1e-3
+    tolerance = 1e-2
     max_iter = 50
     for i in range(20): 
         print(f"---------- Iteration {i} ----------")

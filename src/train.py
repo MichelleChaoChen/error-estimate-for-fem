@@ -59,7 +59,7 @@ class NeuralNetwork:
         model.add(layers.Dense(1, activation='softplus'))
         lr = hp.Float("lr", min_value=1e-4, max_value=1e-2, sampling="log")
         model.compile(
-            loss=self.custom_loss,
+            loss='mean_squared_error',
             optimizer=tf.keras.optimizers.Adam(learning_rate=lr)
         )
         return model
