@@ -248,14 +248,6 @@ def refine(mesh, err_pred, global_error):
     return np.array(refined_mesh)
 
 
-def build_nn_error_estimator(bc, source_func_str, nn_fine, nn_coarse):
-    mesh_coarse = np.linspace(0, 1, 40)
-    solution_coarse = solver(mesh_coarse, bc, source_func_str)
-    generate_data_partial = partial(generate_data, old_sol = solution_coarse, old_grid = mesh_coarse)
-    get_error_estimate_partial = partial(get_error_estimate, nn_fine = nn_fine, nn_coarse = nn_coarse)
-    return lambda solution, mesh: get_error_estimate_partial(generate_data_partial(solution, mesh))
-
-
 def adaptive_mesh_refinement(tolerance, max_iter, bc, source_func_temp, error_estimator):
     # Initialise AMR variables
     mesh = np.linspace(0, 1, 60)
