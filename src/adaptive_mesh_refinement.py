@@ -1,16 +1,11 @@
 from numpy import sqrt, arange, round
-from petsc4py.PETSc import ScalarType
-from mpi4py import MPI
-import ufl
 from scipy import integrate
 import keras
-from dolfinx import fem, io, mesh, plot
 import numpy as np
-from ufl import ds, dx, grad, inner, sin, cos
 from functools import partial
 from plot_utilities import plot_refinement
+from fem_solver import solver
 
-EPSILON = 1e-4
 
 def get_error_estimate(features, nn_fine, nn_coarse):
     """
@@ -245,64 +240,6 @@ def energy(sol, mesh, a_k, freq, bc_1):
     return energy_norm
 
 
-# move to different file
-def solver(mesh_new, dirichletBC, f_str):
-    """
-    Computes the FEM solution using FEniCS. 
-
-    :param mesh_new: The mesh used for the solution
-    :param dirichletBC: Boundary condition
-    :param f_str: Source function in string format
-    :return: FEM solution 
-    """
-    # Define domain
-    x_start = 0.0
-    x_end = 1.0
-
-    # Create mesh
-    N = len(mesh_new)
-
-    cell = ufl.Cell("interval", geometric_dimension=2)
-    domain = ufl.Mesh(ufl.VectorElement("Lagrange", cell, 1))
-
-    x = np.stack((mesh_new, np.zeros(N)), axis=1)
-    cells = np.stack((np.arange(N - 1), np.arange(1, N)),
-                     axis=1).astype("int32")
-    msh = mesh.create_mesh(MPI.COMM_WORLD, cells, x, domain)
-
-    # Define functionspace
-    V = fem.FunctionSpace(msh, ("Lagrange", 1))
-
-    # Define boundary conditions
-    facets = mesh.locate_entities_boundary(msh, dim=0, marker=lambda x: np.logical_or(np.isclose(x[0], x_start),
-                                                                                      np.isclose(x[0], x_end)))
-
-    dofs1 = fem.locate_dofs_topological(V=V, entity_dim=0, entities=facets[0])
-    dofs2 = fem.locate_dofs_topological(V=V, entity_dim=0, entities=facets[1])
-
-    bc1 = fem.dirichletbc(value=ScalarType(0), dofs=dofs1, V=V)
-    bc2 = fem.dirichletbc(value=ScalarType(dirichletBC), dofs=dofs2, V=V)
-
-    # Define trial and test functions and assign coördinates on mesh
-    u = ufl.TrialFunction(V)
-    v = ufl.TestFunction(V)
-    x = ufl.SpatialCoordinate(msh)
-
-    # Call and evaluate source function over domain
-    f = eval(f_str)
-
-    # Define problem
-    a = (inner(grad(u), grad(v))) * dx
-    L = inner(f, v) * dx
-
-    # Solve problem
-    problem = fem.petsc.LinearProblem(a, L, bcs=[bc1, bc2], petsc_options={
-                                      "ksp_type": "preonly", "pc_type": "lu"})
-    uh = problem.solve()
-
-    return uh.x.array
-
-
 def refine(mesh, err_pred, global_error):
     """
     Refines mesh based on local error estimate: 
@@ -314,6 +251,8 @@ def refine(mesh, err_pred, global_error):
     :param global_error: Global error threshold
     :return: Mesh refined based on local error
     """
+    EPSILON = 1e-4
+
     # base case
     if len(mesh) == 1:
         return mesh
@@ -416,7 +355,7 @@ def run_adaptive_mesh_refinement(tolerance, max_iter):
          adaptive_mesh_refinement(tolerance, max_iter, bc, source_func_temp, nn_error_estimator)
 
     # Plot the refinement results
-    plot_refinement(x, solution_exact, meshes, solutions, est_global_errors, ex_global_errors, N_elements)
+    plot_refinement(x, solution_exact, meshes, solutions, est_global_errors, ex_global_errors, N_elements, 'neural_network')
     return solutions
 
 
