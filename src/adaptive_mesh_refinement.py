@@ -248,11 +248,11 @@ def adaptive_mesh_refinement(tolerance, max_iter, bc, source_func, error_estimat
 def run_adaptive_mesh_refinement(tolerance, max_iter):
     """
     Wrapper around the :meth:`adaptive_mesh_refinement` method so 
-    that the error estimator can be passed as parameter
+    that the error estimator can be passed as parameter. 
 
-    :param tolerance: _description_
-    :param max_iter: _description_
-    :return: _description_
+    :param tolerance: Global error tolerance
+    :param max_iter: Maximum iterations of refinement
+    :return: FEM solution at each iteration
     """
     # Load models
     nn_fine = keras.models.load_model("models/Fine_NU_U_HF3GF3J2_logerr_base20_train.h5")

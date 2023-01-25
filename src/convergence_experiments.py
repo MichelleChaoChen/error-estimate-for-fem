@@ -1,45 +1,23 @@
-from scipy import integrate
 import keras
-import numpy as np
 
 from adaptive_mesh_refinement import adaptive_mesh_refinement, f_str, build_nn_error_estimator
 from plot_utilities import plot_mse_error_estimate, plot_number_elements, plot_average_iterations, plot_refinement
 from utils import process_amr_data, write_amr_data
-
-
-class Recovery:
-    def __init__(self, sol, mesh):
-        self.hs = mesh[1:] - mesh[:-1]
-        self.coeffs = np.zeros((len(self.hs) - 2, 3))
-        x_midpoint = (mesh[:-1] + mesh[1:]) / 2
-        self.grad_fem = (sol[1:] - sol[:-1]) / (mesh[1:]-mesh[:-1])
-        for i in range(len(self.coeffs)):
-             self.coeffs[i] = np.polyfit(x_midpoint[i:i+3], self.grad_fem[i:i+3], 2)
-        
-        first_row = self.coeffs[0]
-        last_row = self.coeffs[-1]
-        self.coeffs = np.insert(self.coeffs, 0, first_row, 0)
-        self.coeffs = np.append(self.coeffs, [last_row], 0)
-    
-    def func(self, x):
-        return self.coeffs[:, 0] * x**2 + self.coeffs[:, 1] * x + self.coeffs[:, 2]
-
-
-def error_recovery(xi, sol, mesh, Recovery_err):
-    u_ex_transform = Recovery_err.func(xi * (mesh[1:] - mesh[:-1]) + mesh[:-1])
-    u_transform = (sol[1:] - sol[:-1]) / (mesh[1:] - mesh[:-1])
-    return (u_ex_transform - u_transform)**2 * (mesh[1:] - mesh[:-1]) 
-
-
-def classical_error_estimator(sol, mesh):
-    Recovery_err = Recovery(sol, mesh)
-    energy_squared = integrate.quad_vec(error_recovery, 0, 1, args=(sol, mesh, Recovery_err))[0]
-    energy_norm = np.sqrt(energy_squared)
-    global_error = np.linalg.norm(energy_norm)
-    return energy_norm, global_error
+from recovery_method import classical_error_estimator
 
 
 def convergence_plots(nn_file, rec_file):
+    """
+    Creates several plots that demonstrate the convergence of 
+    adaptive mesh refinement using neural network as error estimator 
+    and compares the performance with recovery-based estimator:
+    1. Comparison of the MSE in error estimation of neural network and recovery method
+    2. Comparison of the average mesh size over iterations
+    3. Comparsion of the average number of iterations refinement needed
+
+    :param nn_file: File containing AMR data with neural network
+    :param rec_file: File containing AMR data with recovery-based error estimator
+    """
     data_nn, avg_run_nn =  process_amr_data(nn_file)
     data_rec, avg_run_rec = process_amr_data(rec_file)
     plot_mse_error_estimate(data_nn, data_rec)
@@ -48,6 +26,13 @@ def convergence_plots(nn_file, rec_file):
 
 
 def convergence_experiments(tolerance, max_iter):
+    """
+    Verifies the convergence AMR with neural network and 
+    compares performance with a recovery-based estimator. 
+
+    :param tolerance: Global error tolerance
+    :param max_iter: Maximum number of iterations of refinement
+    """
     # Load models
     nn_fine = keras.models.load_model("models/Fine_NU_U_HF3GF3J2_logerr_base20_train.h5")
     nn_coarse = keras.models.load_model("models/Coarse_NU_U_HF3GF3J2_logerr_base20_train.h5")
@@ -78,4 +63,5 @@ if __name__ == '__main__':
     # for i in range(10): 
     #     print(f"--------------------- Iteration {i} ---------------------")
     #     convergence_experiments(tolerance, max_iter)
+    # could be changed to pass the text file as argument
     convergence_plots('experiments/amr-data-nn.txt', 'experiments/amr-data-rec.txt')
