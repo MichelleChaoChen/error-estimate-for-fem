@@ -6,3 +6,4 @@ src/*.svg
 .devcontainer
 src/experiments/*.svg
 src/experiments/*.png
+docs/build

@@ -20,7 +20,6 @@ def f_str(coeff_range, freq_range, N):
         if i != N - 1:
             string += ' + '
         my_string += string
-    print(my_string)
     return [my_string, a_k, freq]
 
 
