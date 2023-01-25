@@ -1,188 +1,178 @@
 from numpy import sqrt, arange, round
-
-EPSILON = 1e-4
 import keras
 import numpy as np
 from functools import partial
-import matplotlib.pyplot as plt
-import ufl
+from plot_utilities import plot_refinement
+from fem_solver import solver
+from utils import f_str, exact_sol, energy
 
-from dolfinx import fem, io, mesh, plot
-from ufl import ds, dx, grad, inner, sin, cos
 
-from mpi4py import MPI
-from petsc4py.PETSc import ScalarType
+def get_error_estimate(features, nn_fine, nn_coarse):
+    """
+    Provides the estimate of the local error and global error
+    of feature vectors from one iteration of adaptive mesh refinement. 
 
-def get_error_estimate(features):
-    nn_fine = keras.models.load_model("models/fine_training_scaled.ckpt")
-    nn_coarse = keras.models.load_model("models/coarse_training_scaled.ckpt")
-    threshold = 2**-12
-    fine_separation = np.logical_and(features[:, 0] < threshold, features[:, 1] < threshold, features[:, 2] < threshold)
-
-    try:
-        print('using fine')
-        fine_error = nn_fine.predict(features[fine_separation][:, 3:]).flatten()
-    except:
-        fine_error = 0
+    :param features: Feature vectors for every element on current mesh
+    :param nn_fine: Neural network for fine elements
+    :param nn_coarse: Neural network for coarse elements
+    :return: Array of local error on each element and global error
+    """
+    threshold = 2 ** -12
     
-    try:
-        print('using coarse')
-        coarse_error = nn_coarse.predict(features[~fine_separation][:, 3:]).flatten()
-    except:
+    # Set criteria for element to be fine
+    fine_separation = np.logical_and(
+        features[:, 0] < threshold, features[:, 1] < threshold, features[:, 2] < threshold)
+
+    # Check for prescence of fine elements
+    if len(features[fine_separation]) == 0:
+        fine_error = 0
+    else:
+        fine_error = np.exp(nn_fine.predict(
+            features[fine_separation][:, 3:], verbose=0).flatten())
+
+    # Check for prescence of coarse elements
+    if len(features[~fine_separation]) == 0:
         coarse_error = 0
+    else:
+        coarse_error = np.exp(nn_coarse.predict(
+            features[~fine_separation][:, 3:], verbose=0).flatten())
 
+    print(f"Coarse: {(np.count_nonzero(~fine_separation) / len(features)) * 100:.4f}%, \
+        Fine: {(np.count_nonzero(fine_separation) / len(features)) * 100:.4f}%")
 
+    # Combine the fine and coarse errors
     local_errors = np.zeros(len(features))
     local_errors[fine_separation] = fine_error
-    local_errors[~fine_separation] = coarse_error 
-    local_errors = local_errors * np.sqrt(features[:, 1]) / 10.0
-    local_errors = np.insert(local_errors, 0, local_errors[0])
-    local_errors = np.append(local_errors, local_errors[-1]) 
+    local_errors[~fine_separation] = coarse_error
 
     global_error = np.linalg.norm(np.array(local_errors))
     return local_errors, global_error
 
 
-##########################################
-# Feature generation
-##########################################
-def sampleSource(func, xgrid, frac):
-    hs = xgrid[1:] - xgrid[:-1]
-    x_sample_source = np.tile(frac, (len(xgrid),1))
-    hs_copy = np.append(hs, 1)
-    x_copy = xgrid.copy()
-    x_copy = np.reshape(x_copy, (len(xgrid), 1))
-    
-    x_sample_source = x_sample_source * hs_copy[:, np.newaxis]
-    x_sample_source = x_sample_source + x_copy
-    x_sample_source = x_sample_source.flatten()
-    
-    f_samples = func(x_sample_source)
-    f_samples = np.reshape(f_samples, (len(xgrid), len(frac)))[:-1]
+def build_nn_error_estimator(bc, source_func_str, nn_fine, nn_coarse):
+    """
+    Builds an error estimate function with currying so that
+    there is an uniform interface for getting the error estimate
+    for different estimators (e.g. recovery-based estimators). 
+
+    :param bc: Boundary condition
+    :param source_func_str: Source function in string format (for FEniCS)
+    :param nn_fine: Neural network for fine elements
+    :param nn_coarse: Neural network for coarse elements
+    :return: A error estimate function
+    """
+    mesh_coarse = np.linspace(0, 1, 40)
+    solution_coarse = solver(mesh_coarse, bc, source_func_str)
+    generate_data_partial = partial(generate_data, old_sol = solution_coarse, old_grid = mesh_coarse)
+    get_error_estimate_partial = partial(get_error_estimate, nn_fine = nn_fine, nn_coarse = nn_coarse)
+    return lambda solution, mesh: get_error_estimate_partial(generate_data_partial(solution, mesh))
 
 
-    f_im1 = f_samples[0:-2]
-    f_i = f_samples[1:-1]
-    f_ip1 = f_samples[2:]
-    
-    func_sample = np.hstack((f_im1, f_i, f_ip1))
-    return func_sample
+def relative_change(grad_new, grad_old):
+    """
+    Computes relative change between a batch of quantities. 
+
+    :param grad_new: Quantities from most recent FEM solution
+    :param grad_old: Quantities from base FEM solution
+    :return: The relative change in gradient for a patch of elements
+    """
+    delta = np.abs(((grad_new - grad_old) / grad_old) * 100)
+    return {
+        "i-1": delta[0:-2],
+        "i": delta[1:-1],
+        "i+1": delta[2:],
+    }
 
 
-def gradient(u_fem, xgrid):
-    grad_fem = (u_fem[1:] - u_fem[:-1])/(xgrid[1:] - xgrid[:-1]) 
-    grad_im1 = grad_fem[0:-2]
-    grad_i = grad_fem[1:-1]
-    grad_ip1 = grad_fem[2:]
-    
-    grad_sample = np.vstack((grad_im1, grad_i, grad_ip1))
-    grad_sample = np.transpose(grad_sample)
-    return grad_sample
+def extend_boundary(sol, grid, step):
+    """
+    Extends the boundaries on a mesh using virtual points. 
+
+    :param sol: Computed solution
+    :param grid: The grid to extend the boudary on
+    :param step: Step sizes of the grid
+    :return: Solution, grid, and stepsize with virtual points on the boundary
+    """
+    virtual_point_left = (sol[0] - (sol[1] - sol[0]))
+    sol = np.insert(sol, 0, virtual_point_left)
+    grid = np.insert(grid, 0, grid[0] - step[0])
+    virtual_point_right = (sol[-1] + sol[-1] - sol[-2])
+
+    sol = np.append(sol, virtual_point_right)
+    grid = np.append(grid, grid[-1] + step[-1])
+    step = grid[1:] - grid[:-1]
+
+    return sol, grid, step
 
 
-def get_features(func, xgrid, u_fem, frac=[0.25, 0.5, 0.75]):  
-    hs = xgrid[1:] - xgrid[:-1]
-    hs_i = hs[1:-1]
-    hs_m1 = hs[0:-2]
-    hs_p1 = hs[2:]
-    #print(hs_i, hs_m1, hs_p1)
-    
-    hs_i = hs_i.reshape(-1, 1)
-    hs_m1 = hs_m1.reshape(-1, 1)
-    hs_p1 = hs_p1.reshape(-1, 1)
-    
-    f_sample = sampleSource(func, xgrid, frac)
-    g_sample = gradient(u_fem, xgrid)
-    data = np.hstack((hs_m1, hs_i, hs_p1, f_sample, g_sample))
-    return data
+def generate_data(new_sol, new_grid, old_sol, old_grid):
+    """
+    Creates feature vectors for all elements of new FEM solution
+    using both the new solution and base solution. 
 
+    :param new_sol: New FEM solution
+    :param new_grid: Mesh on which the new FEM solution was computed
+    :param old_sol: Base FEM solution
+    :param old_grid: Coarse mesh for base solution
+    :return: Feature vector used to predict error of new FEM solution 
+    """
+    # Step size: x_i+1 - x_i
+    old_step = old_grid[1:] - old_grid[:-1]
+    new_step = new_grid[1:] - new_grid[:-1]
 
-# Function that creates random sourcefunction
-def f_str(coeff_range, freq_range, N):
-    a_k = np.random.uniform(-coeff_range, coeff_range, N)
-    freq = np.pi * np.random.randint(1, freq_range, N)
-    my_string = ''
-    for i in range(N):
-        string = "%s*sin(%s*x[0])" % (str(a_k[i]), str(freq[i]))
-        if i != N - 1:
-            string += ' + '
-        my_string += string
-    return [my_string, a_k, freq]
+    # Extend boundary on the old and new mesh
+    old_sol, old_grid, old_step = extend_boundary(old_sol, old_grid, old_step)
+    new_sol, new_grid, new_step = extend_boundary(new_sol, new_grid, new_step)
 
+    hs = {"i-1": new_step[0:-2], "i": new_step[1:-1], "i+1": new_step[2:]}
 
-# Define source function non-string format
-def f_exp(a_k, freq, x):
-    f = 0
-    for i in range(len(a_k)):
-        f += a_k[i] * np.sin(freq[i] * x)
-    return f
+    # Gradient: y_i+1 - y_i / x_i+1 - x_i
+    old_grad = (old_sol[1:] - old_sol[:-1]) / old_step
+    new_grad = (new_sol[1:] - new_sol[:-1]) / new_step
 
+    # Search for index of left element to compare with
+    index_grad = np.searchsorted(old_grid, new_grid, 'left')[1:]
+    # Extend coarse grid for comparison
+    inter_old_grad = np.array(list(map(lambda x: old_grad[x - 1], index_grad)))
+    inter_old_grid = np.array(list(map(lambda x: old_step[x - 1], index_grad)))
 
-def exact_sol(x, a_k, freq, bc_1):
-    result = bc_1 * x
-    # C_1 = bc_1 - np.sum((a_k / freq**2) * np.sin(freq))
+    # Compute relative change in gradient and step-size
+    delta_step = relative_change(new_step, inter_old_grid)
+    delta_grad = relative_change(new_grad, inter_old_grad)
+    delta_grad = {k: np.log(v) for k, v in delta_grad.items()}
 
-    for i in range(len(a_k)):
-        result += (a_k[i] / freq[i]**2) * np.sin(freq[i] * x) 
-    return result
+    # Compute jump in gradient
+    grad = {"i-1": new_grad[0:-2], "i": new_grad[1:-1], "i+1": new_grad[2:]}
+    grad_jump_left = np.log(np.maximum(
+        1e-9 * np.ones(len(grad["i"])), np.abs(grad["i-1"] - grad["i"])))
+    grad_jump_right = np.log(np.maximum(
+        1e-9 * np.ones(len(grad["i"])), np.abs(grad["i"] - grad["i+1"])))
 
-
-
-def solver(mesh_new, dirichletBC, f_str):
-    # Define domain
-    x_start = 0.0
-    x_end = 1.0
-
-    # Create mesh
-    N = len(mesh_new)
-
-    cell = ufl.Cell("interval", geometric_dimension=2)
-    domain = ufl.Mesh(ufl.VectorElement("Lagrange", cell, 1))
-
-    x = np.stack((mesh_new, np.zeros(N)), axis=1)
-    cells = np.stack((np.arange(N - 1), np.arange(1, N)), axis=1).astype("int32")
-    msh = mesh.create_mesh(MPI.COMM_WORLD, cells, x, domain)
-
-    # Define functionspace
-    V = fem.FunctionSpace(msh, ("Lagrange", 1))
-
-    # Define boundary conditions
-    facets = mesh.locate_entities_boundary(msh, dim=0, marker=lambda x: np.logical_or(np.isclose(x[0], x_start),
-                                                                                      np.isclose(x[0], x_end)))
-
-    dofs1 = fem.locate_dofs_topological(V=V, entity_dim=0, entities=facets[0])
-    dofs2 = fem.locate_dofs_topological(V=V, entity_dim=0, entities=facets[1])
-
-    bc1 = fem.dirichletbc(value=ScalarType(0), dofs=dofs1, V=V)
-    bc2 = fem.dirichletbc(value=ScalarType(dirichletBC), dofs=dofs2, V=V)
-
-    # Define trial and test functions and assign coördinates on mesh
-    u = ufl.TrialFunction(V)
-    v = ufl.TestFunction(V)
-    x = ufl.SpatialCoordinate(msh)
-
-    # Call and evaluate source function over domain
-    f = eval(f_str)
-
-    # Define problem
-    a = inner(grad(u), grad(v)) * dx
-    L = inner(f, v) * dx
-
-    # Solve problem
-    problem = fem.petsc.LinearProblem(a, L, bcs=[bc1, bc2], petsc_options={"ksp_type": "preonly", "pc_type": "lu"})
-    uh = problem.solve()
-
-    return uh.x.array
+    # Appends all quantities
+    return np.vstack((hs["i-1"], hs["i"], hs["i+1"], delta_step["i-1"], delta_step["i"], delta_step["i+1"],
+                      delta_grad["i-1"], delta_grad["i"], delta_grad["i+1"],
+                      grad_jump_left, grad_jump_right)).transpose()
 
 
 def refine(mesh, err_pred, global_error):
-    #mesh = mesh[1:len(mesh) - 1]
+    """
+    Refines mesh based on local error estimate: 
+    - An element is split into 2 equal halves if local error is high
+    - Two elements are merged if the local error is too low 
+
+    :param mesh: Mesh to refine
+    :param err_pred: Local error on every element
+    :param global_error: Global error threshold
+    :return: Mesh refined based on local error
+    """
+    EPSILON = 1e-4
+
     # base case
     if len(mesh) == 1:
         return mesh
 
     num_elements = len(mesh)
-    compute_err = lambda err: err * sqrt(num_elements) / global_error
+    def compute_err(err): return err * sqrt(num_elements) / global_error
 
     refined_mesh = [mesh[0]]
     for i in range(0, num_elements - 1):
@@ -190,45 +180,100 @@ def refine(mesh, err_pred, global_error):
         num_points = int(round(curErr))
 
         refined_mesh.extend(
-            mesh[i] + (mesh[i + 1] - mesh[i]) / (num_points + 1) * arange(1, num_points + 2)
+            mesh[i] + (mesh[i + 1] - mesh[i]) /
+            (num_points + 1) * arange(1, num_points + 2)
         )
 
         if np.isclose(curErr, 0.5, atol=EPSILON) and \
                 (i + 1 < len(err_pred) and np.isclose(compute_err(err_pred[i + 1]), 0.5, atol=EPSILON)):
             refined_mesh.pop()
-    # refined_mesh = np.insert(refined_mesh, 0, 0)
-    # refined_mesh = np.append(refined_mesh, 1)
     return np.array(refined_mesh)
 
 
-def adaptive_mesh_refinement():
-    mesh = np.linspace(0, 1, 9)
-    source_func_temp = f_str(1000, 50, 1)
-    source_func_str = source_func_temp[0]
-    source_func = partial(f_exp, source_func_temp[1], source_func_temp[2])
-    bc = np.random.uniform(-10, 10)
-    bc = 0
-    tolerance = 1e-3
+def adaptive_mesh_refinement(tolerance, max_iter, bc, source_func, error_estimator):
+    """
+    Performs Adaptive Mesh Refinement: 
+    1. Initializes parameters of the problem
+    2. Computes a base solution on a coarse mesh
+    3. Refines mesh until the global error falls below desired threshold
+    4. Returns final solution
+
+    :param tolerance: Global error tolerance
+    :param max_iter: Maximum iterations of refinement
+    :param bc: Boundary condition of problem
+    :param source_func: Array of values describing the source function
+    :param error_estimator: User-selected error estimator
+    :return: Data from running the AMR pipeline
+    """
+    # Initialise AMR variables
+    mesh = np.linspace(0, 1, 60)
+    x = np.linspace(0, 1, 100000)
     error = 1 << 20
+    N_elements = []
+
+    source_func_str = source_func[0]
+    solution_exact = exact_sol(x,  source_func[1], source_func[2], bc)
+
+    # Initialise data structures for plotting
+    meshes = dict()
+    solutions = dict()
+    est_global_errors = []
+    ex_global_errors = []
+
     iter = 0
-    x = np.linspace(0, 1, 10000)
-    exact = exact_sol(x,  source_func_temp[1], source_func_temp[2], bc)
-    while error > tolerance:
+    while error > tolerance and iter < max_iter:
         iter += 1
+        N_elements.append(len(mesh) - 1)
         solution = solver(mesh, bc, source_func_str)
-        features = get_features(source_func, mesh, solution)
-        local_error, error = get_error_estimate(features)
-        print(" ERROR ", error)
-        plt.figure()
-        plt.title(f"Iteration: {iter}, Error: {error}")
-        plt.plot(mesh, solution, 'r.-')
-        plt.plot(x, exact)
-        plt.savefig(f"Iteration {iter}")
-        if iter >= 10:
-            break
-        mesh = refine(mesh, local_error, error)
+
+        # Estimated error
+        local_error, error = error_estimator(solution, mesh)
         
-    return solution
+        # Exact error
+        ex_error = energy(solution, mesh, source_func[1], source_func[2], bc)
+        ex_global_error = np.sqrt(np.sum(ex_error ** 2))
+        print("ESTIMATED ERROR", error)
+    	
+        # Save AMR information for plotting
+        meshes[iter] = mesh
+        solutions[iter] = solution
+        est_global_errors.append(error)
+        ex_global_errors.append(ex_global_error)
+
+        mesh = refine(mesh, local_error, error)
+
+    return x, solution_exact, meshes, solutions, est_global_errors, ex_global_errors, N_elements
+
+
+def run_adaptive_mesh_refinement(tolerance, max_iter):
+    """
+    Wrapper around the :meth:`adaptive_mesh_refinement` method so 
+    that the error estimator can be passed as parameter. 
+
+    :param tolerance: Global error tolerance
+    :param max_iter: Maximum iterations of refinement
+    :return: FEM solution at each iteration
+    """
+    # Load models
+    nn_fine = keras.models.load_model("models/Fine_NU_U_HF3GF3J2_logerr_base20_train.h5")
+    nn_coarse = keras.models.load_model("models/Coarse_NU_U_HF3GF3J2_logerr_base20_train.h5")
+
+    # Initialise AMR variables
+    bc = 0
+    source_func = f_str(1000, 40, 2)
+    source_func_str = source_func[0]
+
+    # AMR with neural network
+    nn_error_estimator = build_nn_error_estimator(bc, source_func_str, nn_fine, nn_coarse)
+    x, solution_exact, meshes, solutions, est_global_errors, ex_global_errors, N_elements = \
+         adaptive_mesh_refinement(tolerance, max_iter, bc, source_func, nn_error_estimator)
+
+    # Plot the refinement results
+    plot_refinement(x, solution_exact, meshes, solutions, est_global_errors, ex_global_errors, N_elements, 'neural_network')
+    return solutions
+
 
 if __name__ == '__main__':
-    adaptive_mesh_refinement()
+    tolerance = 1e-2
+    max_iter = 13
+    run_adaptive_mesh_refinement(tolerance, max_iter)
