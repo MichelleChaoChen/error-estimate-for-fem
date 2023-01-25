@@ -1,10 +1,10 @@
 from numpy import sqrt, arange, round
-from scipy import integrate
 import keras
 import numpy as np
 from functools import partial
 from plot_utilities import plot_refinement
 from fem_solver import solver
+from utils import f_str, exact_sol, energy
 
 
 def get_error_estimate(features, nn_fine, nn_coarse):
@@ -49,13 +49,32 @@ def get_error_estimate(features, nn_fine, nn_coarse):
     return local_errors, global_error
 
 
+def build_nn_error_estimator(bc, source_func_str, nn_fine, nn_coarse):
+    """
+    Builds an error estimate function with currying so that
+    there is an uniform interface for getting the error estimate
+    for different estimators (e.g. recovery-based estimators). 
+
+    :param bc: Boundary condition
+    :param source_func_str: Source function in string format (for FEniCS)
+    :param nn_fine: Neural network for fine elements
+    :param nn_coarse: Neural network for coarse elements
+    :return: A error estimate function
+    """
+    mesh_coarse = np.linspace(0, 1, 40)
+    solution_coarse = solver(mesh_coarse, bc, source_func_str)
+    generate_data_partial = partial(generate_data, old_sol = solution_coarse, old_grid = mesh_coarse)
+    get_error_estimate_partial = partial(get_error_estimate, nn_fine = nn_fine, nn_coarse = nn_coarse)
+    return lambda solution, mesh: get_error_estimate_partial(generate_data_partial(solution, mesh))
+
+
 def relative_change(grad_new, grad_old):
     """
     Computes relative change between a batch of quantities. 
 
     :param grad_new: Quantities from most recent FEM solution
     :param grad_old: Quantities from base FEM solution
-    :return: 
+    :return: The relative change in gradient for a patch of elements
     """
     delta = np.abs(((grad_new - grad_old) / grad_old) * 100)
     return {
@@ -135,111 +154,6 @@ def generate_data(new_sol, new_grid, old_sol, old_grid):
                       grad_jump_left, grad_jump_right)).transpose()
 
 
-def f_str(coeff_range, freq_range, N):
-    """
-    Function that creates random source function 
-    using sines. 
-
-    :param coeff_range: Range of coefficients of sines
-    :param freq_range: Range of frequency of sines
-    :param N: The number of terms in the sum of sines
-    :return: Source function in string format
-    """
-    a_k = np.random.uniform(coeff_range-1, coeff_range, N)
-    freq = np.pi * np.random.randint(freq_range-1, freq_range, N)
-    my_string = ''
-    for i in range(N):
-        string = "%s*sin(%s*x[0])" % (str(a_k[i]), str(freq[i]))
-        if i != N - 1:
-            string += ' + '
-        my_string += string
-    return [my_string, a_k, freq]
-
-
-def f_exp(a_k, freq, x):
-    """
-    Defines the source function in non-string format
-    using the coefficients and  frequency, so that the 
-    exact solution can be found. 
-
-    :param a_k: Coefficients of sines in source function
-    :param freq: Frequencies of sines in source function
-    :param x: Domain of the source function
-    :return: Source function
-    """
-    f = 0
-    for i in range(len(a_k)):
-        f += a_k[i] * np.sin(freq[i] * x)
-    return f
-
-
-def exact_gradient(x, a_k, freq, bc_1):
-    """
-    Computes the exact gradient of the solution. 
-
-    :param x: Domain of function
-    :param a_k: Coefficients of source function
-    :param freq: Frequency of source function
-    :param bc_1: Boundary condition 
-    :return: Exact gradient of solution
-    """
-    result = bc_1
-    for i in range(len(a_k)):
-        result += (a_k[i] / freq[i]) * np.cos(freq[i] * x)
-    return result
-
-
-def exact_sol(x, a_k, freq, bc_1):
-    """
-    Computse the exact solution. 
-
-    :param x: Domain of function
-    :param a_k: Coefficients of source function
-    :param freq: Frequency of source function
-    :param bc_1: Boundary condition
-    :return: Value of exact solution 
-    """
-    result = bc_1 * x
-    for i in range(len(a_k)):
-        result += (a_k[i] / freq[i] ** 2) * np.sin(freq[i] * x)
-    return result
-
-
-def error_master(xi, sol, mesh, a_k, freq, bc_1):
-    """
-    Creates the function for evaluating the energy norm. 
-
-    :param xi: Domain of function 
-    :param sol: FEM solution
-    :param mesh: Mesh used for FEM solution
-    :param a_k: Coefficients of source function
-    :param freq: Frequency of source function
-    :param bc_1: Boundary condition 
-    :return: Function for evaluating energy norm
-    """
-    u_ex_transform = exact_gradient(
-        xi * (mesh[1:] - mesh[:-1]) + mesh[:-1], a_k, freq, bc_1)
-    u_transform = (sol[1:] - sol[:-1]) / (mesh[1:] - mesh[:-1])
-    return (u_ex_transform - u_transform) ** 2 * (mesh[1:] - mesh[:-1])
-
-
-def energy(sol, mesh, a_k, freq, bc_1):
-    """
-    Computes the energy norm of the solution. 
-
-    :param sol: Domain of function
-    :param mesh: Mesh used for FEM solution
-    :param a_k: Coefficients of source function
-    :param freq: Frequency of source function
-    :param bc_1: Boundary condition
-    :return: Energy norm on the solution 
-    """
-    energy_squared = integrate.quad_vec(
-        error_master, 0, 1, args=(sol, mesh, a_k, freq, bc_1))[0]
-    energy_norm = np.sqrt(energy_squared)
-    return energy_norm
-
-
 def refine(mesh, err_pred, global_error):
     """
     Refines mesh based on local error estimate: 
@@ -274,14 +188,6 @@ def refine(mesh, err_pred, global_error):
                 (i + 1 < len(err_pred) and np.isclose(compute_err(err_pred[i + 1]), 0.5, atol=EPSILON)):
             refined_mesh.pop()
     return np.array(refined_mesh)
-
-
-def build_nn_error_estimator(bc, source_func_str, nn_fine, nn_coarse):
-    mesh_coarse = np.linspace(0, 1, 40)
-    solution_coarse = solver(mesh_coarse, bc, source_func_str)
-    generate_data_partial = partial(generate_data, old_sol = solution_coarse, old_grid = mesh_coarse)
-    get_error_estimate_partial = partial(get_error_estimate, nn_fine = nn_fine, nn_coarse = nn_coarse)
-    return lambda solution, mesh: get_error_estimate_partial(generate_data_partial(solution, mesh))
 
 
 def adaptive_mesh_refinement(tolerance, max_iter, bc, source_func, error_estimator):
@@ -346,13 +252,13 @@ def run_adaptive_mesh_refinement(tolerance, max_iter):
 
     # Initialise AMR variables
     bc = 0
-    source_func_temp = f_str(1000, 40, 2)
-    source_func_str = source_func_temp[0]
+    source_func = f_str(1000, 40, 2)
+    source_func_str = source_func[0]
 
     # AMR with neural network
     nn_error_estimator = build_nn_error_estimator(bc, source_func_str, nn_fine, nn_coarse)
     x, solution_exact, meshes, solutions, est_global_errors, ex_global_errors, N_elements = \
-         adaptive_mesh_refinement(tolerance, max_iter, bc, source_func_temp, nn_error_estimator)
+         adaptive_mesh_refinement(tolerance, max_iter, bc, source_func, nn_error_estimator)
 
     # Plot the refinement results
     plot_refinement(x, solution_exact, meshes, solutions, est_global_errors, ex_global_errors, N_elements, 'neural_network')
