@@ -4,16 +4,19 @@ from scipy.stats import gaussian_kde
 
 
 def plot_refinement(x, exact, meshes, solutions, est_global_errors, ex_global_errors, N_elements, plot_title, color=True):
-    """_summary_
+    """
+    Plots how the mesh is refined and shows the global error estimates
+    over iterations of refinement before the global error falls below
+    the desired threshold. 
 
-    :param x: _description_
-    :param exact: _description_
-    :param meshes: _description_
-    :param solutions: _description_
-    :param est_global_errors: _description_
-    :param ex_global_errors: _description_
-    :param N_elements: _description_
-    :param color: _description_, defaults to True
+    :param x: The domain 
+    :param exact: The exact solution 
+    :param meshes: Meshes of each iteration of refinement
+    :param solutions: The FEM solution at each iteration
+    :param est_global_errors: The estimated global error at each iteration
+    :param ex_global_errors: The exact global error at each iteration
+    :param N_elements: The size of the mesh
+    :param color: Whether a color scheme should be used plotting, defaults to True
     """
     plt.figure(figsize=(15, 10))
     ax1 = plt.subplot(211)
@@ -45,58 +48,15 @@ def plot_refinement(x, exact, meshes, solutions, est_global_errors, ex_global_er
     plt.savefig(f"plots/refinement_plot_{plot_title}")        
 
 
-def plot_error_convergence(ex_global_errors, est_global_errors_nn, est_global_errors_rec, plot_title):
-    iterations = len(ex_global_errors)
-    plt.figure()
-    plt.semilogy(range(iterations), ex_global_errors, 'o-', color='orange', label='Exact Errors')
-    plt.semilogy(range(iterations), est_global_errors_nn, 'o--', color='blue', label='Estimated Errors (NN)')
-    plt.semilogy(range(iterations), est_global_errors_rec, 'o--', color='green', label='Estimated Errors (Recovery)')
-    plt.legend()
-    plt.xlabel('Iterations')
-    plt.ylabel('Global Error')
-    plt.title(plot_title)
-    plt.savefig('experiments/error_plot.png')
+def compute_mse_error_estimate(data):
+    """
+    Computes the MSE in error estimation, 
+    i.e. how far away is the estimated error
+    from the exact error.
 
-
-def write_amr_data(filename, nr_elements, est_global_errors, ex_global_errors):
-    f = open(filename, "a")
-    for i in range(len(est_global_errors)):
-        elements = str(nr_elements[i])
-        est_err = str(est_global_errors[i])
-        ex_err = str(ex_global_errors[i])
-        iter = str(i+1)
-        f.write(f"{iter}, {elements}, {est_err}, {ex_err}")
-        f.write("\n")
-    f.close()
-
-
-def process_amr_data(filename):
-    f = open(filename, "r")
-    rows = f.read().splitlines()[1:-1]
-    data = dict()
-    iterations = []
-    last = 0
-    for entry in rows:
-        entry = entry.split(", ")
-
-        iteration = int(entry[0])       # 0 = iteration;
-        elements = int(entry[1])        # 1 = num elements;
-        global_err = float(entry[2])    # 2 = est global error;
-        exact_err = float(entry[3])     # 3 = exact global error
-
-        if not entry[0] in data: 
-            data[entry[0]] = []
-        
-        data[entry[0]].append([elements, global_err, exact_err])
-
-        if (iteration < last):
-            iterations.append(last)
-        last = iteration
-
-    return data, np.mean(iterations)
-
-
-def compute_mse_error_estimate(data):    
+    :param data: Data from multiple AMR runs
+    :return: MSE of error estimation over numerous iterations
+    """
     mses = []
     for it, values in data.items(): 
         square_dif = list(map(lambda value: (value[1] - value[2]) * (value[1] - value[2]), values))
@@ -105,17 +65,33 @@ def compute_mse_error_estimate(data):
     return mses 
 
 
-def compute_average_elements(data):    
+def compute_average_elements(data):
+    """
+    Computes the average mesh size
+    over multiple AMR runs for different 
+    source functions. 
+
+    :param data: Data from multiple AMR runs
+    :return: THe average mesh size over the runs
+    """   
     num_elements = []
     for it, values in data.items(): 
         values = np.array(values)
         n_elements = values[:, 0]
         mean_elements = np.mean(n_elements) 
         num_elements.append(mean_elements)
-    return num_elements
+    return np.array(num_elements)
 
 
 def plot_mse_error_estimate(data_nn, data_rec):
+    """
+    Plots the error (MSE) of the neural network error estimator 
+    and the recovery-based error estimator. Provides a visual comparison of the two methods. 
+    The results can be found in the experiments directory. 
+
+    :param data_nn: AMR data with neural network error estimator
+    :param data_rec: AMR data with recovery-based error estimator
+    """
     mse_nn = compute_mse_error_estimate(data_nn)
     mse_rec = compute_mse_error_estimate(data_rec)
     plt.figure()
@@ -129,11 +105,23 @@ def plot_mse_error_estimate(data_nn, data_rec):
 
 
 def plot_number_elements(data_nn, data_rec):
-    elements_nn = compute_average_elements(data_nn)
+    """
+    Plots how the average mesh size changes 
+    as the number of iterations in AMR increases. This 
+    offers a comparison between mesh size with the neural network
+    and recovery method. 
+
+    :param data_nn: AMR data with neural network error estimator
+    :param data_rec: AMR data with recovery-based error estimator
+    """
+    elements_nn =  compute_average_elements(data_nn)
     elements_rec = compute_average_elements(data_rec)
     plt.figure()
-    relative_change = (np.array(elements_rec) / np.array(elements_nn[:-1]) * 100.0) - 100.0
-    plt.plot(range(1, len(elements_nn[:-1]) + 1), relative_change , 'o--', label='Saved by Neural Network')
+    max_size = max(elements_nn.shape[0], elements_rec.shape[0])
+    elements_rec = np.pad(elements_rec, (0, max_size - elements_rec.shape[0]), mode='maximum')
+    elements_rec = np.pad(elements_rec, (0, max_size - elements_nn.shape[0]), mode='maximum')
+    relative_change = ((elements_rec / elements_nn) * 100.0) - 100.0
+    plt.plot(range(1, len(elements_nn) + 1), relative_change , 'o--', label='Saved by Neural Network')
     plt.xticks(range(1, len(elements_nn[:-1]) + 1))
     plt.xlabel('Iteration')
     plt.ylabel('Percent of Mesh Size Reduction')
@@ -142,9 +130,18 @@ def plot_number_elements(data_nn, data_rec):
 
 
 def plot_average_iterations(avg_run_nn, avg_run_rec):
+    """
+    Plots the average number of iterations needed
+    by neural network estimator and recovery-based
+    estimator in AMR for the global error to fall
+    below the desired threshold. 
+
+    :param avg_run_nn: Average number of runs with neural network estimator
+    :param avg_run_rec: Average number of runs with recovery-based estimator
+    """
     methods = ['Neural Network', 'Recovery Method']
     avg_run = [avg_run_nn, avg_run_rec]
     plt.figure()
-    plt.bar(methods, height=avg_run, width=0.4, label='Average Number of Iterations')
+    plt.bar(methods, height=avg_run, width=0.25, label='Average Number of Iterations')
     plt.legend()
     plt.savefig('experiments/avg_iterations.svg')

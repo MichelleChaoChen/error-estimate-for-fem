@@ -3,7 +3,8 @@ import keras
 import numpy as np
 
 from adaptive_mesh_refinement import adaptive_mesh_refinement, f_str, build_nn_error_estimator
-from plot_utilities import process_amr_data, plot_mse_error_estimate, plot_number_elements, plot_average_iterations, write_amr_data, plot_refinement
+from plot_utilities import plot_mse_error_estimate, plot_number_elements, plot_average_iterations, plot_refinement
+from utils import process_amr_data, write_amr_data
 
 
 class Recovery:
@@ -25,9 +26,9 @@ class Recovery:
 
 
 def error_recovery(xi, sol, mesh, Recovery_err):
-    u_ex_transform = Recovery_err.func(xi*(mesh[1:]-mesh[:-1]) + mesh[:-1])
-    u_transform = (sol[1:] - sol[:-1]) / (mesh[1:]-mesh[:-1])
-    return (u_ex_transform-u_transform)**2 * (mesh[1:]-mesh[:-1]) 
+    u_ex_transform = Recovery_err.func(xi * (mesh[1:] - mesh[:-1]) + mesh[:-1])
+    u_transform = (sol[1:] - sol[:-1]) / (mesh[1:] - mesh[:-1])
+    return (u_ex_transform - u_transform)**2 * (mesh[1:] - mesh[:-1]) 
 
 
 def classical_error_estimator(sol, mesh):
@@ -72,9 +73,9 @@ def convergence_experiments(tolerance, max_iter):
 
 
 if __name__ == '__main__':
-    tolerance = 1e-3
+    tolerance = 1e-2
     max_iter = 20
-    for i in range(20): 
-        print(f"--------------------- Iteration {i} ---------------------")
-        convergence_experiments(tolerance, max_iter)
+    # for i in range(10): 
+    #     print(f"--------------------- Iteration {i} ---------------------")
+    #     convergence_experiments(tolerance, max_iter)
     convergence_plots('experiments/amr-data-nn.txt', 'experiments/amr-data-rec.txt')
