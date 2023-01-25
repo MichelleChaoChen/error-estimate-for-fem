@@ -1,0 +1,21 @@
+name: Documentation
+on: [push, pull_request, workflow_dispatch]
+jobs:
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup python
+        uses: actions/setup-python@v4.5.0
+      - name: Install dependencies
+        run: pip install sphinx sphinx_rtd_theme
+      - name: Build documentation
+        run: cd docs && make html
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v3.0.0
+      - name: Upload GitHub Pages artifact
+        uses: actions/upload-pages-artifact@v1.0.7
+        with:
+          path: docs/build/html
+      - name: Deploy GitHub Pages site
+        uses: actions/deploy-pages@v1.2.3
