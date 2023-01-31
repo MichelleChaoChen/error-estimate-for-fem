@@ -1,6 +1,8 @@
 from scipy import integrate
 import keras
 import numpy as np
+from utils import * 
+from fem_solver import solver
 
 class Recovery:
     def __init__(self, sol, mesh):
@@ -26,9 +28,36 @@ def error_recovery(xi, sol, mesh, Recovery_err):
     return (u_ex_transform - u_transform)**2 * (mesh[1:] - mesh[:-1]) 
 
 
-def classical_error_estimator(sol, mesh):
+def recovery_error_estimator(sol, mesh):
     Recovery_err = Recovery(sol, mesh)
     energy_squared = integrate.quad_vec(error_recovery, 0, 1, args=(sol, mesh, Recovery_err))[0]
     energy_norm = np.sqrt(energy_squared)
     global_error = np.linalg.norm(energy_norm)
     return energy_norm, global_error
+
+
+def explicit_error(a_k, freq, solution, mesh):
+    step = mesh[1:] - mesh[:-1]
+    r = element_residual(step, a_k, freq, mesh)[1:-1]
+    j = get_jump(solution, step)
+    step = step[1:-1]
+    local_error = np.sqrt(step * step * r + 0.5 * step * j * j)
+    local_error = np.insert(local_error, 0, local_error[0])
+    local_error = np.append(local_error, local_error[-1])
+    global_error = np.linalg.norm(local_error)
+    return local_error, global_error
+
+
+def build_explicit_error_estimator(bc, source_func):
+    a_k = source_func[1]
+    freq = source_func[2]
+    estimator = partial(explicit_error, a_k, freq)
+    return lambda solution, mesh: estimator(solution, mesh)
+
+
+def richardson_error_estimator(bc, source_func, solution, mesh):
+    # Solve on twice as fine 
+
+
+
+

@@ -1,7 +1,8 @@
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.stats import gaussian_kde
-
+from utils import process_training_data
+import pandas as pd
 
 def plot_refinement(x, exact, meshes, solutions, est_global_errors, ex_global_errors, N_elements, plot_title, color=True):
     """
@@ -96,7 +97,7 @@ def plot_mse_error_estimate(data_nn, data_rec):
     mse_rec = compute_mse_error_estimate(data_rec)
     plt.figure()
     plt.semilogy(range(1, len(mse_nn) + 1), mse_nn, 'o-', label='Neural Network')
-    plt.semilogy(range(1, len(mse_rec) + 1), mse_rec, 'o-', label='Recovery Method')
+    plt.semilogy(range(1, len(mse_rec) + 1), mse_rec, 'o-', label='Residual Method')
     plt.xticks(range(1, len(mse_nn) + 1))
     plt.xlabel('Iteration')
     plt.ylabel('Error in Error Estimation')
@@ -119,7 +120,7 @@ def plot_number_elements(data_nn, data_rec):
     plt.figure()
     max_size = max(elements_nn.shape[0], elements_rec.shape[0])
     elements_rec = np.pad(elements_rec, (0, max_size - elements_rec.shape[0]), mode='maximum')
-    elements_rec = np.pad(elements_rec, (0, max_size - elements_nn.shape[0]), mode='maximum')
+    elements_nn = np.pad(elements_nn, (0, max_size - elements_nn.shape[0]), mode='maximum')
     relative_change = ((elements_rec / elements_nn) * 100.0) - 100.0
     plt.plot(range(1, len(elements_nn) + 1), relative_change , 'o--', label='Saved by Neural Network')
     plt.xticks(range(1, len(elements_nn[:-1]) + 1))
@@ -139,9 +140,31 @@ def plot_average_iterations(avg_run_nn, avg_run_rec):
     :param avg_run_nn: Average number of runs with neural network estimator
     :param avg_run_rec: Average number of runs with recovery-based estimator
     """
-    methods = ['Neural Network', 'Recovery Method']
+    methods = ['Neural Network', 'Residual Method']
     avg_run = [avg_run_nn, avg_run_rec]
     plt.figure()
     plt.bar(methods, height=avg_run, width=0.25, label='Average Number of Iterations')
     plt.legend()
     plt.savefig('experiments/avg_iterations.svg')
+
+
+def plot_tuning_comparison(tuned, non_tuned, tp):
+    tuned_loss, tuned_val = process_training_data(tuned)
+    loss, val = process_training_data(non_tuned)
+    
+    losses = np.array([np.array(tuned_loss), np.array(val)])
+    df = pd.DataFrame({"Tuned": losses[0], "Non_tuned":losses[1]})
+
+    plt.figure()
+    df.Tuned.rolling(5).mean().plot(logy=True)
+    df.Non_tuned.rolling(5).mean().plot(logy=True)
+
+    plt.xlabel('Epoch')
+    plt.ylabel('Loss')
+    plt.legend()
+    plt.savefig(f'experiments/{tp}_tune_comparison.svg')
+
+
+if __name__ == '__main__':
+    plot_tuning_comparison('experiments/training-coarse-tuned.txt', 'experiments/training-coarse.txt', 'coarse')
+    plot_tuning_comparison('experiments/training-fine-tuned.txt', 'experiments/training-fine.txt', 'fine')

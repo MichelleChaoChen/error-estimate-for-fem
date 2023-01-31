@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 from tensorflow import keras
 import keras_tuner as kt
 from keras import layers
+from functools import partial
 
 
 class NeuralNetwork:
@@ -31,9 +32,10 @@ class NeuralNetwork:
                                   max_epochs=10,
                                   factor=3,
                                   directory='hyperparameters',
-                                  project_name='tuning_log')
+                                  project_name='error_estimator')
         print("START TUNING")
         best_hps = self.tune_model()
+        # best_hps = None
         print("START TRAINING")
         self.model = self.train(best_hps, epochs)
         print("START EVALUATING")
@@ -75,13 +77,13 @@ class NeuralNetwork:
             model.add(
                 layers.Dense(
                     units=hp.Int(f"units_{i}", min_value=32, max_value=512),
-                    activation=hp.Choice("activation", ["relu", "tanh"])
+                    activation=hp.Choice("activation", ["relu"])
                 )
             )
         if hp.Boolean("dropout"):
             model.add(layers.Dropout(rate=0.25))
-        model.add(layers.Dense(1, activation='softplus'))
-        lr = hp.Float("lr", min_value=1e-4, max_value=1e-2, sampling="log")
+        model.add(layers.Dense(1))
+        lr = hp.Float("lr", min_value=1e-5, max_value=1e-2, sampling="log")
         model.compile(
             loss='mean_squared_error',
             optimizer=tf.keras.optimizers.Adam(learning_rate=lr)
@@ -100,7 +102,7 @@ class NeuralNetwork:
         model.fit(self.train_features, self.train_labels, epochs=epochs,
                   validation_split=0.2, verbose=2)
         return model
-
+        
     def tune_model(self):
         """
         Tunes the neural network by searching 
