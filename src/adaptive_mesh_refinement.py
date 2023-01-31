@@ -4,7 +4,7 @@ import numpy as np
 from functools import partial
 from plot_utilities import plot_refinement
 from fem_solver import solver
-from utils import f_str, exact_sol, energy
+from utils import f_str, exact_sol, energy, search_mesh_size, f_str_det
 
 
 def get_error_estimate(features, nn_fine, nn_coarse):
@@ -49,7 +49,7 @@ def get_error_estimate(features, nn_fine, nn_coarse):
     return local_errors, global_error
 
 
-def build_nn_error_estimator(bc, source_func_str, nn_fine, nn_coarse):
+def build_nn_error_estimator(bc, source_func_str, nn_fine, nn_coarse, mesh_coarse):
     """
     Builds an error estimate function with currying so that
     there is an uniform interface for getting the error estimate
@@ -61,7 +61,6 @@ def build_nn_error_estimator(bc, source_func_str, nn_fine, nn_coarse):
     :param nn_coarse: Neural network for coarse elements
     :return: A error estimate function
     """
-    mesh_coarse = np.linspace(0, 1, 40)
     solution_coarse = solver(mesh_coarse, bc, source_func_str)
     generate_data_partial = partial(generate_data, old_sol = solution_coarse, old_grid = mesh_coarse)
     get_error_estimate_partial = partial(get_error_estimate, nn_fine = nn_fine, nn_coarse = nn_coarse)
@@ -190,7 +189,7 @@ def refine(mesh, err_pred, global_error):
     return np.array(refined_mesh)
 
 
-def adaptive_mesh_refinement(tolerance, max_iter, bc, source_func, error_estimator):
+def adaptive_mesh_refinement(tolerance, max_iter, bc, source_func, error_estimator, mesh):
     """
     Performs Adaptive Mesh Refinement: 
     1. Initializes parameters of the problem
@@ -206,7 +205,6 @@ def adaptive_mesh_refinement(tolerance, max_iter, bc, source_func, error_estimat
     :return: Data from running the AMR pipeline
     """
     # Initialise AMR variables
-    mesh = np.linspace(0, 1, 60)
     x = np.linspace(0, 1, 100000)
     error = 1 << 20
     N_elements = []
@@ -233,7 +231,7 @@ def adaptive_mesh_refinement(tolerance, max_iter, bc, source_func, error_estimat
         ex_error = energy(solution, mesh, source_func[1], source_func[2], bc)
         ex_global_error = np.sqrt(np.sum(ex_error ** 2))
         print("ESTIMATED ERROR", error)
-    	
+        print("EXACT ERROR", ex_global_error)
         # Save AMR information for plotting
         meshes[iter] = mesh
         solutions[iter] = solution
@@ -260,13 +258,14 @@ def run_adaptive_mesh_refinement(tolerance, max_iter):
 
     # Initialise AMR variables
     bc = 0
-    source_func = f_str(1000, 40, 2)
+    source_func = f_str_det(302)
     source_func_str = source_func[0]
+    coarse_mesh, initial_mesh = search_mesh_size(40, bc, source_func_str)
 
     # AMR with neural network
-    nn_error_estimator = build_nn_error_estimator(bc, source_func_str, nn_fine, nn_coarse)
+    nn_error_estimator = build_nn_error_estimator(bc, source_func_str, nn_fine, nn_coarse, coarse_mesh)
     x, solution_exact, meshes, solutions, est_global_errors, ex_global_errors, N_elements = \
-         adaptive_mesh_refinement(tolerance, max_iter, bc, source_func, nn_error_estimator)
+         adaptive_mesh_refinement(tolerance, max_iter, bc, source_func, nn_error_estimator, initial_mesh)
 
     # Plot the refinement results
     plot_refinement(x, solution_exact, meshes, solutions, est_global_errors, ex_global_errors, N_elements, 'neural_network')
@@ -275,5 +274,5 @@ def run_adaptive_mesh_refinement(tolerance, max_iter):
 
 if __name__ == '__main__':
     tolerance = 1e-2
-    max_iter = 13
+    max_iter = 3
     run_adaptive_mesh_refinement(tolerance, max_iter)
