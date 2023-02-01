@@ -5,12 +5,29 @@
 
 Welcome to Error Estimation for FEM Using Neural Networks's documentation!
 ==========================================================================
-rasfsllkfdjlsa;flk
+
+The goal of this project is to develop an error estimator for the Finite Element Method (FEM). The error estimator is a neural network
+that uses the properties a FEM as input and outputs a local error estimate. We have incorporated the estimator in an Adaptive Mesh
+Refinement (AMR) pipeline to test its efficacy. The error estimator (neural network) can be trained by user-provided data and be used 
+alternatively in the AMR pipeline, with restrictions on the input and output vector dimensions.  
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
+   :caption: Getting Started
 
+   set_up.rst
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Technical Documentation
+   
+   amr.rst
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Utilities 
+   
+   plot_utils.rst
 
 
 Indices and tables
