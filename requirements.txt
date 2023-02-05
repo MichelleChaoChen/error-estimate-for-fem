@@ -1,9 +1,3 @@
-fenics
-fenics-dolfinx
-mpich 
-pyvista 
-scikit-learn 
-matplotlib
 tensorflow==2.11
 keras_tuner
 pandas
