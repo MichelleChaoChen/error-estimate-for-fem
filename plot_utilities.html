@@ -1,0 +1,339 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>Plotting Utilities &mdash; Error Estimation for FEM Using Neural Networks 2023 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Utilities" href="utils.html" />
+    <link rel="prev" title="Classical Error Estimation Methods" href="classical_methods.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> Error Estimation for FEM Using Neural Networks
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="set_up.html">Getting Started Guide</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Technical Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="amr.html">Adaptive Mesh Refinement</a></li>
+<li class="toctree-l1"><a class="reference internal" href="train.html">Neural Network Training &amp; Tuning</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fem_solver.html">Finite Element Solver</a></li>
+<li class="toctree-l1"><a class="reference internal" href="convergence_experiments.html">Convergence Experiments</a></li>
+<li class="toctree-l1"><a class="reference internal" href="classical_methods.html">Classical Error Estimation Methods</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Utilities</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Plotting Utilities</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#plot_utilities.compute_average_elements"><code class="docutils literal notranslate"><span class="pre">compute_average_elements()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#plot_utilities.compute_mse_error_estimate"><code class="docutils literal notranslate"><span class="pre">compute_mse_error_estimate()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#plot_utilities.plot_average_iterations"><code class="docutils literal notranslate"><span class="pre">plot_average_iterations()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#plot_utilities.plot_mse_error_estimate"><code class="docutils literal notranslate"><span class="pre">plot_mse_error_estimate()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#plot_utilities.plot_number_elements"><code class="docutils literal notranslate"><span class="pre">plot_number_elements()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#plot_utilities.plot_refinement"><code class="docutils literal notranslate"><span class="pre">plot_refinement()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="utils.html">Utilities</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Error Estimation for FEM Using Neural Networks</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Plotting Utilities</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/plot_utilities.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <section id="plotting-utilities">
+<h1>Plotting Utilities<a class="headerlink" href="#plotting-utilities" title="Permalink to this heading">¶</a></h1>
+<p>The plotting utilities presented can be used to visualise the convergence and performance of our error estimator</p>
+<span class="target" id="module-plot_utilities"></span><dl class="py function">
+<dt class="sig sig-object py" id="plot_utilities.compute_average_elements">
+<span class="sig-prename descclassname"><span class="pre">plot_utilities.</span></span><span class="sig-name descname"><span class="pre">compute_average_elements</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#plot_utilities.compute_average_elements" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the average mesh size
+over multiple AMR runs for different 
+source functions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>data</strong> – Data from multiple AMR runs</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>THe average mesh size over the runs</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="plot_utilities.compute_mse_error_estimate">
+<span class="sig-prename descclassname"><span class="pre">plot_utilities.</span></span><span class="sig-name descname"><span class="pre">compute_mse_error_estimate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#plot_utilities.compute_mse_error_estimate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the MSE in error estimation, 
+i.e. how far away is the estimated error
+from the exact error.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>data</strong> – Data from multiple AMR runs</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>MSE of error estimation over numerous iterations</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="plot_utilities.plot_average_iterations">
+<span class="sig-prename descclassname"><span class="pre">plot_utilities.</span></span><span class="sig-name descname"><span class="pre">plot_average_iterations</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">avg_run_nn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">avg_run_rec</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#plot_utilities.plot_average_iterations" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plots the average number of iterations needed
+by neural network estimator and recovery-based
+estimator in AMR for the global error to fall
+below the desired threshold.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>avg_run_nn</strong> – Average number of runs with neural network estimator</p></li>
+<li><p><strong>avg_run_rec</strong> – Average number of runs with recovery-based estimator</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="plot_utilities.plot_mse_error_estimate">
+<span class="sig-prename descclassname"><span class="pre">plot_utilities.</span></span><span class="sig-name descname"><span class="pre">plot_mse_error_estimate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_nn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_exp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_rec</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#plot_utilities.plot_mse_error_estimate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plots the error (MSE) of the neural network error estimator 
+and the recovery-based error estimator. Provides a visual comparison of the two methods. 
+The results can be found in the experiments directory.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data_nn</strong> – AMR data with neural network error estimator</p></li>
+<li><p><strong>data_exp</strong> – AMR data with explicit error estimator</p></li>
+<li><p><strong>data_rec</strong> – AMR data with recovery-based error estimator</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="plot_utilities.plot_number_elements">
+<span class="sig-prename descclassname"><span class="pre">plot_utilities.</span></span><span class="sig-name descname"><span class="pre">plot_number_elements</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_nn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_rec</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#plot_utilities.plot_number_elements" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plots how the average mesh size changes 
+as the number of iterations in AMR increases. This 
+offers a comparison between mesh size with the neural network
+and recovery method.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data_nn</strong> – AMR data with neural network error estimator</p></li>
+<li><p><strong>data_rec</strong> – AMR data with recovery-based error estimator</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="plot_utilities.plot_refinement">
+<span class="sig-prename descclassname"><span class="pre">plot_utilities.</span></span><span class="sig-name descname"><span class="pre">plot_refinement</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exact</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meshes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">solutions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">est_global_errors</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ex_global_errors</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">N_elements</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_title</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#plot_utilities.plot_refinement" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plots how the mesh is refined and shows the global error estimates
+over iterations of refinement before the global error falls below
+the desired threshold.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> – The domain</p></li>
+<li><p><strong>exact</strong> – The exact solution</p></li>
+<li><p><strong>meshes</strong> – Meshes of each iteration of refinement</p></li>
+<li><p><strong>solutions</strong> – The FEM solution at each iteration</p></li>
+<li><p><strong>est_global_errors</strong> – The estimated global error at each iteration</p></li>
+<li><p><strong>ex_global_errors</strong> – The exact global error at each iteration</p></li>
+<li><p><strong>N_elements</strong> – The size of the mesh</p></li>
+<li><p><strong>color</strong> – Whether a color scheme should be used plotting, defaults to True</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="utils.html" class="btn btn-neutral float-right" title="Utilities" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="classical_methods.html" class="btn btn-neutral float-left" title="Classical Error Estimation Methods" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2023, Minor Group 2.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

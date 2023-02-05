@@ -1,5 +1,0 @@
-tensorflow==2.11
-keras_tuner
-pandas
-sphinx
-sphinx_rtd_theme

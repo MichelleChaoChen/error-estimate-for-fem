@@ -1,0 +1,299 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>Welcome to Error Estimation for FEM Using Neural Networks’s documentation! &mdash; Error Estimation for FEM Using Neural Networks 2023 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Getting Started Guide" href="set_up.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="#" class="icon icon-home"> Error Estimation for FEM Using Neural Networks
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="set_up.html">Getting Started Guide</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Technical Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="amr.html">Adaptive Mesh Refinement</a></li>
+<li class="toctree-l1"><a class="reference internal" href="train.html">Neural Network Training &amp; Tuning</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fem_solver.html">Finite Element Solver</a></li>
+<li class="toctree-l1"><a class="reference internal" href="convergence_experiments.html">Convergence Experiments</a></li>
+<li class="toctree-l1"><a class="reference internal" href="classical_methods.html">Classical Error Estimation Methods</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Utilities</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="plot_utilities.html">Plotting Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="utils.html">Utilities</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="#">Error Estimation for FEM Using Neural Networks</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="#" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Welcome to Error Estimation for FEM Using Neural Networks’s documentation!</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <section id="welcome-to-error-estimation-for-fem-using-neural-networks-s-documentation">
+<h1>Welcome to Error Estimation for FEM Using Neural Networks’s documentation!<a class="headerlink" href="#welcome-to-error-estimation-for-fem-using-neural-networks-s-documentation" title="Permalink to this heading">¶</a></h1>
+<p>The goal of this project is to develop an error estimator for the Finite Element Method (FEM). The error estimator is a neural network
+that uses the properties a FEM as input and outputs a local error estimate. We have incorporated the estimator in an Adaptive Mesh
+Refinement (AMR) pipeline to test its efficacy. The error estimator (neural network) can be trained by user-provided data and be used
+alternatively in the AMR pipeline, with restrictions on the input and output vector dimensions.</p>
+<div class="toctree-wrapper compound">
+<p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="set_up.html">Getting Started Guide</a></li>
+</ul>
+</div>
+<div class="toctree-wrapper compound">
+<p class="caption" role="heading"><span class="caption-text">Technical Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="amr.html">Adaptive Mesh Refinement</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="amr.html#adaptive_mesh_refinement.adaptive_mesh_refinement"><code class="docutils literal notranslate"><span class="pre">adaptive_mesh_refinement()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="amr.html#adaptive_mesh_refinement.build_nn_error_estimator"><code class="docutils literal notranslate"><span class="pre">build_nn_error_estimator()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="amr.html#adaptive_mesh_refinement.extend_boundary"><code class="docutils literal notranslate"><span class="pre">extend_boundary()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="amr.html#adaptive_mesh_refinement.extend_boundary_rotate"><code class="docutils literal notranslate"><span class="pre">extend_boundary_rotate()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="amr.html#adaptive_mesh_refinement.generate_data"><code class="docutils literal notranslate"><span class="pre">generate_data()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="amr.html#adaptive_mesh_refinement.get_error_estimate"><code class="docutils literal notranslate"><span class="pre">get_error_estimate()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="amr.html#adaptive_mesh_refinement.refine"><code class="docutils literal notranslate"><span class="pre">refine()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="amr.html#adaptive_mesh_refinement.relative_change"><code class="docutils literal notranslate"><span class="pre">relative_change()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="amr.html#adaptive_mesh_refinement.run_adaptive_mesh_refinement"><code class="docutils literal notranslate"><span class="pre">run_adaptive_mesh_refinement()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="train.html">Neural Network Training &amp; Tuning</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="train.html#train.NeuralNetwork"><code class="docutils literal notranslate"><span class="pre">NeuralNetwork</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="fem_solver.html">Finite Element Solver</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="fem_solver.html#fem_solver.solver"><code class="docutils literal notranslate"><span class="pre">solver()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="convergence_experiments.html">Convergence Experiments</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="convergence_experiments.html#convergence_experiments.convergence_experiments"><code class="docutils literal notranslate"><span class="pre">convergence_experiments()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="convergence_experiments.html#convergence_experiments.convergence_plots"><code class="docutils literal notranslate"><span class="pre">convergence_plots()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="classical_methods.html">Classical Error Estimation Methods</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="classical_methods.html#classical_methods.Recovery"><code class="docutils literal notranslate"><span class="pre">Recovery</span></code></a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="toctree-wrapper compound">
+<p class="caption" role="heading"><span class="caption-text">Utilities</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="plot_utilities.html">Plotting Utilities</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="plot_utilities.html#plot_utilities.compute_average_elements"><code class="docutils literal notranslate"><span class="pre">compute_average_elements()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="plot_utilities.html#plot_utilities.compute_mse_error_estimate"><code class="docutils literal notranslate"><span class="pre">compute_mse_error_estimate()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="plot_utilities.html#plot_utilities.plot_average_iterations"><code class="docutils literal notranslate"><span class="pre">plot_average_iterations()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="plot_utilities.html#plot_utilities.plot_mse_error_estimate"><code class="docutils literal notranslate"><span class="pre">plot_mse_error_estimate()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="plot_utilities.html#plot_utilities.plot_number_elements"><code class="docutils literal notranslate"><span class="pre">plot_number_elements()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="plot_utilities.html#plot_utilities.plot_refinement"><code class="docutils literal notranslate"><span class="pre">plot_refinement()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="utils.html">Utilities</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="utils.html#utils.energy"><code class="docutils literal notranslate"><span class="pre">energy()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="utils.html#utils.error_master"><code class="docutils literal notranslate"><span class="pre">error_master()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="utils.html#utils.exact_gradient"><code class="docutils literal notranslate"><span class="pre">exact_gradient()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="utils.html#utils.exact_sol"><code class="docutils literal notranslate"><span class="pre">exact_sol()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="utils.html#utils.f_str"><code class="docutils literal notranslate"><span class="pre">f_str()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="utils.html#utils.process_amr_data"><code class="docutils literal notranslate"><span class="pre">process_amr_data()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="utils.html#utils.write_amr_data"><code class="docutils literal notranslate"><span class="pre">write_amr_data()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+<section id="indices-and-tables">
+<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this heading">¶</a></h1>
+<ul class="simple">
+<li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p></li>
+<li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
+<li><p><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></p></li>
+</ul>
+</section>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="set_up.html" class="btn btn-neutral float-right" title="Getting Started Guide" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2023, Minor Group 2.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

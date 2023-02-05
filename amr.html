@@ -1,0 +1,413 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>Adaptive Mesh Refinement &mdash; Error Estimation for FEM Using Neural Networks 2023 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Neural Network Training &amp; Tuning" href="train.html" />
+    <link rel="prev" title="Getting Started Guide" href="set_up.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> Error Estimation for FEM Using Neural Networks
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="set_up.html">Getting Started Guide</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Technical Documentation</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Adaptive Mesh Refinement</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#adaptive_mesh_refinement.adaptive_mesh_refinement"><code class="docutils literal notranslate"><span class="pre">adaptive_mesh_refinement()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#adaptive_mesh_refinement.build_nn_error_estimator"><code class="docutils literal notranslate"><span class="pre">build_nn_error_estimator()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#adaptive_mesh_refinement.extend_boundary"><code class="docutils literal notranslate"><span class="pre">extend_boundary()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#adaptive_mesh_refinement.extend_boundary_rotate"><code class="docutils literal notranslate"><span class="pre">extend_boundary_rotate()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#adaptive_mesh_refinement.generate_data"><code class="docutils literal notranslate"><span class="pre">generate_data()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#adaptive_mesh_refinement.get_error_estimate"><code class="docutils literal notranslate"><span class="pre">get_error_estimate()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#adaptive_mesh_refinement.refine"><code class="docutils literal notranslate"><span class="pre">refine()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#adaptive_mesh_refinement.relative_change"><code class="docutils literal notranslate"><span class="pre">relative_change()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#adaptive_mesh_refinement.run_adaptive_mesh_refinement"><code class="docutils literal notranslate"><span class="pre">run_adaptive_mesh_refinement()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="train.html">Neural Network Training &amp; Tuning</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fem_solver.html">Finite Element Solver</a></li>
+<li class="toctree-l1"><a class="reference internal" href="convergence_experiments.html">Convergence Experiments</a></li>
+<li class="toctree-l1"><a class="reference internal" href="classical_methods.html">Classical Error Estimation Methods</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Utilities</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="plot_utilities.html">Plotting Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="utils.html">Utilities</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Error Estimation for FEM Using Neural Networks</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Adaptive Mesh Refinement</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/amr.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <section id="adaptive-mesh-refinement">
+<h1>Adaptive Mesh Refinement<a class="headerlink" href="#adaptive-mesh-refinement" title="Permalink to this heading">¶</a></h1>
+<p>Adaptive Mesh Refinement (AMR) pipeline methods.</p>
+<span class="target" id="module-adaptive_mesh_refinement"></span><dl class="py function">
+<dt class="sig sig-object py" id="adaptive_mesh_refinement.adaptive_mesh_refinement">
+<span class="sig-prename descclassname"><span class="pre">adaptive_mesh_refinement.</span></span><span class="sig-name descname"><span class="pre">adaptive_mesh_refinement</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tolerance</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source_func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">error_estimator</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mesh</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#adaptive_mesh_refinement.adaptive_mesh_refinement" title="Permalink to this definition">¶</a></dt>
+<dd><p>Performs Adaptive Mesh Refinement: 
+1. Initializes parameters of the problem
+2. Computes a base solution on a coarse mesh
+3. Refines mesh until the global error falls below desired threshold
+4. Returns final solution</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tolerance</strong> – Global error tolerance</p></li>
+<li><p><strong>max_iter</strong> – Maximum iterations of refinement</p></li>
+<li><p><strong>bc</strong> – Boundary condition of problem</p></li>
+<li><p><strong>source_func</strong> – Array of values describing the source function</p></li>
+<li><p><strong>error_estimator</strong> – User-selected error estimator</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Data from running the AMR pipeline</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="adaptive_mesh_refinement.build_nn_error_estimator">
+<span class="sig-prename descclassname"><span class="pre">adaptive_mesh_refinement.</span></span><span class="sig-name descname"><span class="pre">build_nn_error_estimator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source_func_str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nn_fine</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nn_coarse</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mesh_coarse</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#adaptive_mesh_refinement.build_nn_error_estimator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Builds an error estimate function with currying so that
+there is an uniform interface for getting the error estimate
+for different estimators (e.g. recovery-based estimators).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>bc</strong> – Boundary condition</p></li>
+<li><p><strong>source_func_str</strong> – Source function in string format (for FEniCS)</p></li>
+<li><p><strong>nn_fine</strong> – Neural network for fine elements</p></li>
+<li><p><strong>nn_coarse</strong> – Neural network for coarse elements</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A error estimate function</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="adaptive_mesh_refinement.extend_boundary">
+<span class="sig-prename descclassname"><span class="pre">adaptive_mesh_refinement.</span></span><span class="sig-name descname"><span class="pre">extend_boundary</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sol</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#adaptive_mesh_refinement.extend_boundary" title="Permalink to this definition">¶</a></dt>
+<dd><p>Extends the boundaries on a mesh using virtual points.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sol</strong> – Computed solution</p></li>
+<li><p><strong>grid</strong> – The grid to extend the boudary on</p></li>
+<li><p><strong>step</strong> – Step sizes of the grid</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Solution, grid, and stepsize with virtual points on the boundary</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="adaptive_mesh_refinement.extend_boundary_rotate">
+<span class="sig-prename descclassname"><span class="pre">adaptive_mesh_refinement.</span></span><span class="sig-name descname"><span class="pre">extend_boundary_rotate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sol</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#adaptive_mesh_refinement.extend_boundary_rotate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Extends the boundaries on a mesh using virtual points. 
+Prevents the jump at the boundary element being equal to 0.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sol</strong> – Computed solution</p></li>
+<li><p><strong>grid</strong> – The grid to extend the boudary on</p></li>
+<li><p><strong>step</strong> – Step sizes of the grid</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Solution, grid, and stepsize with virtual points on the boundary</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="adaptive_mesh_refinement.generate_data">
+<span class="sig-prename descclassname"><span class="pre">adaptive_mesh_refinement.</span></span><span class="sig-name descname"><span class="pre">generate_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">new_sol</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_grid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">old_sol</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">old_grid</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#adaptive_mesh_refinement.generate_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates feature vectors for all elements of new FEM solution
+using both the new solution and base solution.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>new_sol</strong> – New FEM solution</p></li>
+<li><p><strong>new_grid</strong> – Mesh on which the new FEM solution was computed</p></li>
+<li><p><strong>old_sol</strong> – Base FEM solution</p></li>
+<li><p><strong>old_grid</strong> – Coarse mesh for base solution</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Feature vector used to predict error of new FEM solution</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="adaptive_mesh_refinement.get_error_estimate">
+<span class="sig-prename descclassname"><span class="pre">adaptive_mesh_refinement.</span></span><span class="sig-name descname"><span class="pre">get_error_estimate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">features</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nn_fine</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nn_coarse</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#adaptive_mesh_refinement.get_error_estimate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Provides the estimate of the local error and global error
+of feature vectors from one iteration of adaptive mesh refinement.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>features</strong> – Feature vectors for every element on current mesh</p></li>
+<li><p><strong>nn_fine</strong> – Neural network for fine elements</p></li>
+<li><p><strong>nn_coarse</strong> – Neural network for coarse elements</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Array of local error on each element and global error</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="adaptive_mesh_refinement.refine">
+<span class="sig-prename descclassname"><span class="pre">adaptive_mesh_refinement.</span></span><span class="sig-name descname"><span class="pre">refine</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mesh</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">err_pred</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">global_error</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#adaptive_mesh_refinement.refine" title="Permalink to this definition">¶</a></dt>
+<dd><p>Refines mesh based on local error estimate: 
+- An element is split into 2 equal halves if local error is high
+- Two elements are merged if the local error is too low</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mesh</strong> – Mesh to refine</p></li>
+<li><p><strong>err_pred</strong> – Local error on every element</p></li>
+<li><p><strong>global_error</strong> – Global error threshold</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Mesh refined based on local error</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="adaptive_mesh_refinement.relative_change">
+<span class="sig-prename descclassname"><span class="pre">adaptive_mesh_refinement.</span></span><span class="sig-name descname"><span class="pre">relative_change</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grad_new</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grad_old</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#adaptive_mesh_refinement.relative_change" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes relative change between a batch of quantities.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>grad_new</strong> – Quantities from most recent FEM solution</p></li>
+<li><p><strong>grad_old</strong> – Quantities from base FEM solution</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The relative change in gradient for a patch of elements</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="adaptive_mesh_refinement.run_adaptive_mesh_refinement">
+<span class="sig-prename descclassname"><span class="pre">adaptive_mesh_refinement.</span></span><span class="sig-name descname"><span class="pre">run_adaptive_mesh_refinement</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tolerance</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iter</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#adaptive_mesh_refinement.run_adaptive_mesh_refinement" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wrapper around the <a class="reference internal" href="#module-adaptive_mesh_refinement" title="adaptive_mesh_refinement"><code class="xref py py-meth docutils literal notranslate"><span class="pre">adaptive_mesh_refinement()</span></code></a> method so 
+that the error estimator can be passed as parameter.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tolerance</strong> – Global error tolerance</p></li>
+<li><p><strong>max_iter</strong> – Maximum iterations of refinement</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>FEM solution at each iteration</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="train.html" class="btn btn-neutral float-right" title="Neural Network Training &amp; Tuning" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="set_up.html" class="btn btn-neutral float-left" title="Getting Started Guide" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2023, Minor Group 2.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
