@@ -14,6 +14,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+      - name: Install Nvidia Container Toolkit
+        run: sudo apt-get update && sudo apt-get install -y nvidia-container-toolkit
       - name: Pre-build image and build documentation in dev container
         uses: devcontainers/ci@v0.2
         with:
