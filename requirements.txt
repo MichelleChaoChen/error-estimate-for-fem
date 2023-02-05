@@ -1,5 +1,5 @@
 fenics
-dolfinx
+fenics-dolfinx
 mpich 
 pyvista 
 scikit-learn 
