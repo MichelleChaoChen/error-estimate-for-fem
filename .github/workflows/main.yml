@@ -14,12 +14,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Setup python
-        uses: actions/setup-python@v4.5.0
-      - name: Install dependencies
-        run: pip3 install -r requirements.txt && conda install -y -c conda-forge cudatoolkit=11.2 cudnn=8.1.0 fenics-dolfinx mpich pyvista scikit-learn matplotlib
-      - name: Build documentation
-        run: cd docs && make html
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v1 
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Pre-build image and build documentation in dev container
+        uses: devcontainers/ci@v0.2
+        with:
+          imageName: ghcr.io/MichelleChaoChen/error-estimate-for-fem-devcontainer
+          cacheFrom: ghcr.io/MichelleChaoChen/error-estimate-for-fem-devcontainer
+          push: always
+          runCmd: cd docs && make html
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v3.0.0
       - name: Upload GitHub Pages artifact
