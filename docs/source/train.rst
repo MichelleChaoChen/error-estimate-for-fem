@@ -2,5 +2,6 @@
 Neural Network Training & Tuning
 =========================================================
 
-.. automodule:: train
+.. autoclass:: train.NeuralNetwork
     :members:
+    :special-members: 
