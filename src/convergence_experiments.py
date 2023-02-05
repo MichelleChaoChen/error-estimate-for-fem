@@ -8,7 +8,7 @@ from fem_solver import solver
 
 import numpy as np 
 
-def convergence_plots(nn_file, rec_file):
+def convergence_plots(nn_file, exp_file, rec_file):
     """
     Creates several plots that demonstrate the convergence of 
     adaptive mesh refinement using neural network as error estimator 
@@ -18,16 +18,18 @@ def convergence_plots(nn_file, rec_file):
     3. Comparsion of the average number of iterations refinement needed
 
     :param nn_file: File containing AMR data with neural network
+    :param exp_file: File containing AMR data with explicit error estimator
     :param rec_file: File containing AMR data with recovery-based error estimator
     """
     data_nn, avg_run_nn =  process_amr_data(nn_file)
     data_rec, avg_run_rec = process_amr_data(rec_file)
-    plot_mse_error_estimate(data_nn, data_rec)
+    data_exp, avg_run_exp = process_amr_data(exp_file)
+    plot_mse_error_estimate(data_nn, data_exp, data_rec)
     plot_number_elements(data_nn, data_rec)
     plot_average_iterations(avg_run_nn, avg_run_rec)
 
 
-def convergence_experiments(tolerance, max_iter, file_nn, file_classical):
+def convergence_experiments(tolerance, max_iter, file_nn, file_explicit, file_recovery):
     """
     Verifies the convergence AMR with neural network and 
     compares performance with a recovery-based estimator. 
@@ -52,20 +54,21 @@ def convergence_experiments(tolerance, max_iter, file_nn, file_classical):
          adaptive_mesh_refinement(tolerance, max_iter, bc, source_func, nn_error_estimator, initial_mesh)
     write_amr_data(file_nn, N_elements_nn, est_global_errors_nn, ex_global_errors_nn)
 
-    # AMR with classical error estimator
-    classical_error_estimator = build_explicit_error_estimator(bc, source_func)
-    x, solution_exact, meshes, solutions, est_global_errors, ex_global_errors, N_elements = \
-        adaptive_mesh_refinement(tolerance, max_iter, bc, source_func, classical_error_estimator, initial_mesh)
-    write_amr_data(file_classical, N_elements, est_global_errors, ex_global_errors)
+    # AMR with explicit error estimator
+    explicit_error_estimator = build_explicit_error_estimator(bc, source_func)
+    x_ex, solution_exact_ex, meshes_ex, solutions_ex, est_global_errors_ex, ex_global_errors_ex, N_elements_ex = \
+        adaptive_mesh_refinement(tolerance, max_iter, bc, source_func, explicit_error_estimator, initial_mesh)
+    write_amr_data(file_explicit, N_elements_ex, est_global_errors_ex, ex_global_errors_ex)
 
-    # plot_refinement(x_nn, solution_exact_nn, meshes_nn, solutions_nn, est_global_errors_nn, ex_global_errors_nn, N_elements_nn, 'neural network')    
-    # plot_refinement(x, solution_exact, meshes, solutions, est_global_errors, ex_global_errors, N_elements, 'classical method') 
-
+    # AMR with recovery error estimator
+    x_rec, solution_exact_rec, meshes_rec, solutions_rec, est_global_errors_rec, ex_global_errors_rec, N_elements_rec = \
+        adaptive_mesh_refinement(tolerance, max_iter, bc, source_func, recovery_error_estimator, initial_mesh)
+    write_amr_data(file_recovery, N_elements_rec, est_global_errors_rec, ex_global_errors_rec)
 
 
 def count_effectivity(freq, error_est, error_ext):
     ratio = error_est / error_ext
-    cut_off = np.logical_or(ratio > 5, ratio < 0.2)
+    cut_off = np.logical_or(ratio > 10, ratio < 0.1)
     frac = len(ratio[cut_off]) / len(ratio)
     return 100 * frac 
 
@@ -81,7 +84,7 @@ def test_frequency(max_iter):
     high = 500
     freq = (low + high) / 2
     eff = 1 << 20 
-    percent = 90
+    percent = 100
     i = 0 
 
     while abs(eff - percent) > 1 and i < max_iter:
@@ -120,8 +123,8 @@ def test_frequency_eff(max_iter):
 
     # Initialise AMR variables
     bc = 0
-    low = 100
-    high = 500
+    low = 200
+    high = 350
     freq = 303
     eff = 1 << 20 
     percent = 90
@@ -141,7 +144,7 @@ def test_frequency_eff(max_iter):
         print("freq", freq)
         eff = count_effectivity(freq, error_est, error_ext)
         print("eff", eff)
-        freq += 0.1
+        freq += 1
         # if eff - percent > 0: 
         #     high = freq
         #     freq = (low + freq) / 2
@@ -159,11 +162,13 @@ def test_frequency_eff(max_iter):
 if __name__ == '__main__':
     tolerance = 1e-2
     max_iter = 16
-    # file_nn = 'experiments/amr-data-nn-2.txt'
-    # file_classical = 'experiments/amr-data-explicit.txt'
+    # file_nn = 'experiments/amr-data-nn.txt'
+    # file_explicit = 'experiments/amr-data-explicit.txt'
+    # file_recovery = 'experiments/amr-data-recovery.txt'
     # for i in range(10): 
     #     print(f"--------------------- Iteration {i} ---------------------")
-    #     convergence_experiments(tolerance, max_iter, file_nn, file_classical)
-    # could be changed to pass the text file as argument
-    # convergence_plots(file_nn, file_classical)
+    #     convergence_experiments(tolerance, max_iter, file_nn, file_explicit, file_recovery)
+
+    # # could be changed to pass the text file as argument
+    # # convergence_plots(file_nn, file_explicit, file_recovery)
     test_frequency_eff(max_iter)

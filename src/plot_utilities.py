@@ -84,20 +84,23 @@ def compute_average_elements(data):
     return np.array(num_elements)
 
 
-def plot_mse_error_estimate(data_nn, data_rec):
+def plot_mse_error_estimate(data_nn, data_exp, data_rec):
     """
     Plots the error (MSE) of the neural network error estimator 
     and the recovery-based error estimator. Provides a visual comparison of the two methods. 
     The results can be found in the experiments directory. 
 
     :param data_nn: AMR data with neural network error estimator
+    :param data_exp: AMR data with explicit error estimator
     :param data_rec: AMR data with recovery-based error estimator
     """
     mse_nn = compute_mse_error_estimate(data_nn)
+    mse_exp = compute_mse_error_estimate(data_exp)
     mse_rec = compute_mse_error_estimate(data_rec)
     plt.figure()
     plt.semilogy(range(1, len(mse_nn) + 1), mse_nn, 'o-', label='Neural Network')
-    plt.semilogy(range(1, len(mse_rec) + 1), mse_rec, 'o-', label='Residual Method')
+    plt.semilogy(range(1, len(mse_exp) + 1), mse_exp, 'o-', label='Explicit Method')
+    plt.semilogy(range(1, len(mse_rec) + 1), mse_rec, 'o-', label='Recovery Method')
     plt.xticks(range(1, len(mse_nn) + 1))
     plt.xlabel('Iteration')
     plt.ylabel('Error in Error Estimation')

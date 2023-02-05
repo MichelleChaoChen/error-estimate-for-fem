@@ -1,8 +1,6 @@
 =========================================================
-Adaptive Mesh Refinement
+Neural Network Training & Tuning
 =========================================================
 
-Adaptive Mesh Refinement (AMR) pipeline methods. 
-
-.. automodule:: adaptive_mesh_refinement
+.. automodule:: train
     :members:
