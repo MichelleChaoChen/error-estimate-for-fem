@@ -17,8 +17,8 @@ jobs:
       - name: Pre-build image and build documentation in dev container
         uses: devcontainers/ci@v0.2
         with:
-          imageName: ghcr.io/MichelleChaoChen/error-estimate-for-fem-devcontainer
-          cacheFrom: ghcr.io/MichelleChaoChen/error-estimate-for-fem-devcontainer
+          imageName: ghcr.io/michellechaochen/error-estimate-for-fem-devcontainer
+          cacheFrom: ghcr.io/michellechaochen/error-estimate-for-fem-devcontainer
           push: always
           runCmd: cd docs && make html
       - name: Configure GitHub Pages
