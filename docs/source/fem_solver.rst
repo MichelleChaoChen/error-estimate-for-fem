@@ -1,8 +1,6 @@
 =========================================================
-Adaptive Mesh Refinement
+Finite Element Solver
 =========================================================
 
-Adaptive Mesh Refinement (AMR) pipeline methods. 
-
-.. automodule:: adaptive_mesh_refinement
+.. automodule:: fem_solver
     :members:

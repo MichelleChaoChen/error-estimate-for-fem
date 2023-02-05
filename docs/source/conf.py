@@ -8,7 +8,7 @@
 
 import os 
 import sys
-sys.path.insert(0, os.path.abspath('../../'))
+sys.path.insert(0, os.path.abspath('../../src'))
 project = 'Error Estimation for FEM Using Neural Networks'
 copyright = '2023, Minor Group 2'
 author = 'Minor Group 2'
@@ -17,7 +17,7 @@ release = '2023'
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
-extensions = []
+extensions = ['sphinx.ext.autodoc']
 
 templates_path = ['_templates']
 exclude_patterns = []

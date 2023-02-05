@@ -104,6 +104,51 @@ def extend_boundary(sol, grid, step):
     return sol, grid, step
 
 
+def extend_boundary_rotate(sol, grid, step):
+    """
+    Extends the boundaries on a mesh using virtual points. 
+    Prevents the jump at the boundary element being equal to 0. 
+
+    :param sol: Computed solution
+    :param grid: The grid to extend the boudary on
+    :param step: Step sizes of the grid
+    :return: Solution, grid, and stepsize with virtual points on the boundary
+    """
+    grad = (sol[1:] - sol[:-1])/step
+    Jump_1 = grad[1] - grad[0]
+    angle_1 = np.arctan(abs(Jump_1))
+    Jump_2 = grad[-1] - grad[-2]
+    angle_2 = np.arctan(abs(Jump_2))
+
+    random1 = np.random.randint(1, 3)
+    random2 = np.random.randint(1, 3)
+
+    angle_1 /= random1 * (-1) ** random2
+    angle_2 /= random2 * (-1) ** random1
+
+
+    virtual_point_left = (sol[0] - (sol[1] - sol[0]))
+    x = grid[0] - step[0]
+    y = virtual_point_left
+    virtual_point_left = x*np.sin(angle_1) + y*np.cos(angle_1)
+    sol = np.insert(sol, 0, virtual_point_left)
+    grid = np.insert(grid, 0, grid[0] - step[0])
+
+
+    virtual_point_right = (sol[-1] + sol[-1] - sol[-2])
+    x = grid[-1] + step[-1]
+    y = virtual_point_right
+    x -= grid[-1]
+    y -= sol[-1]
+    y = x*np.sin(angle_2) + y*np.cos(angle_2)
+    virtual_point_right = y + sol[-1]
+    sol = np.append(sol, virtual_point_right)
+    grid = np.append(grid, grid[-1] + step[-1])
+    step = grid[1:] - grid[:-1]
+
+    return sol, grid, step
+
+
 def generate_data(new_sol, new_grid, old_sol, old_grid):
     """
     Creates feature vectors for all elements of new FEM solution
@@ -120,8 +165,8 @@ def generate_data(new_sol, new_grid, old_sol, old_grid):
     new_step = new_grid[1:] - new_grid[:-1]
 
     # Extend boundary on the old and new mesh
-    old_sol, old_grid, old_step = extend_boundary(old_sol, old_grid, old_step)
-    new_sol, new_grid, new_step = extend_boundary(new_sol, new_grid, new_step)
+    old_sol, old_grid, old_step = extend_boundary_rotate(old_sol, old_grid, old_step)
+    new_sol, new_grid, new_step = extend_boundary_rotate(new_sol, new_grid, new_step)
 
     hs = {"i-1": new_step[0:-2], "i": new_step[1:-1], "i+1": new_step[2:]}
 
@@ -175,7 +220,16 @@ def refine(mesh, err_pred, global_error):
 
     refined_mesh = [mesh[0]]
     for i in range(0, num_elements - 1):
+        
         curErr = compute_err(err_pred[i])
+        # print("err", curErr)
+        if (curErr > 1 and curErr < 32768):
+            curErr = np.log2(curErr)
+        elif curErr < 32000:
+            curErr = 15
+        else: 
+            curErr = curErr
+
         num_points = int(round(curErr))
 
         refined_mesh.extend(
@@ -205,7 +259,7 @@ def adaptive_mesh_refinement(tolerance, max_iter, bc, source_func, error_estimat
     :return: Data from running the AMR pipeline
     """
     # Initialise AMR variables
-    x = np.linspace(0, 1, 100000)
+    x = np.linspace(0, 1000, 40)
     error = 1 << 20
     N_elements = []
 
@@ -238,7 +292,7 @@ def adaptive_mesh_refinement(tolerance, max_iter, bc, source_func, error_estimat
         est_global_errors.append(error)
         ex_global_errors.append(ex_global_error)
 
-        mesh = refine(mesh, local_error, error)
+        mesh = refine(mesh, local_error, tolerance)
 
     return x, solution_exact, meshes, solutions, est_global_errors, ex_global_errors, N_elements
 
@@ -258,7 +312,7 @@ def run_adaptive_mesh_refinement(tolerance, max_iter):
 
     # Initialise AMR variables
     bc = 0
-    source_func = f_str_det(302)
+    source_func = f_str(1000, 40, 2)
     source_func_str = source_func[0]
     coarse_mesh, initial_mesh = search_mesh_size(40, bc, source_func_str)
 
@@ -268,11 +322,11 @@ def run_adaptive_mesh_refinement(tolerance, max_iter):
          adaptive_mesh_refinement(tolerance, max_iter, bc, source_func, nn_error_estimator, initial_mesh)
 
     # Plot the refinement results
-    plot_refinement(x, solution_exact, meshes, solutions, est_global_errors, ex_global_errors, N_elements, 'neural_network')
+    # plot_refinement(x, solution_exact, meshes, solutions, est_global_errors, ex_global_errors, N_elements, 'neural_network')
     return solutions
 
 
 if __name__ == '__main__':
     tolerance = 1e-2
-    max_iter = 3
+    max_iter = 15
     run_adaptive_mesh_refinement(tolerance, max_iter)

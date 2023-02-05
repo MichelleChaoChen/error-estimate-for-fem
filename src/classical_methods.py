@@ -53,11 +53,3 @@ def build_explicit_error_estimator(bc, source_func):
     freq = source_func[2]
     estimator = partial(explicit_error, a_k, freq)
     return lambda solution, mesh: estimator(solution, mesh)
-
-
-def richardson_error_estimator(bc, source_func, solution, mesh):
-    # Solve on twice as fine 
-
-
-
-

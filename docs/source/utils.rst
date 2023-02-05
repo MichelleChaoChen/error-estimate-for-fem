@@ -1,8 +1,6 @@
 =========================================================
-Adaptive Mesh Refinement
+Utilities 
 =========================================================
 
-Adaptive Mesh Refinement (AMR) pipeline methods. 
-
-.. automodule:: adaptive_mesh_refinement
+.. automodule:: utils
     :members:

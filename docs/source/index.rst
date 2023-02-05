@@ -22,12 +22,17 @@ alternatively in the AMR pipeline, with restrictions on the input and output vec
    :caption: Technical Documentation
    
    amr.rst
+   train.rst
+   fem_solver.rst
+   convergence_experiments.rst
+   classical_methods.rst
 
 .. toctree::
    :maxdepth: 2
    :caption: Utilities 
    
-   plot_utils.rst
+   plot_utilities.rst
+   utils.rst
 
 
 Indices and tables

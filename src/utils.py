@@ -172,18 +172,15 @@ def process_training_data(filename):
 
 
 def search_mesh_size(B, bc, f_source_str):
-    # B = int((B / 4)) * 4
+    B = int((B / 4)) * 4
 
-    # p = compute_p(B, bc, f_source_str)
-    # while p < 0.9 or p > 1.1:
-    #     B *= 2 
-    #     p = compute_p(B, bc, f_source_str)
+    p = compute_p(B, bc, f_source_str)
+    while p < 0.9 or p > 1.1:
+        B *= 2 
+        p = compute_p(B, bc, f_source_str)
     
-    # # print("spacing of mesh:", B)
-    # # print("p", p)
-    B = 40 
-    I = 4000
-    return np.linspace(0, 1, B + 1), np.linspace(0, 1, I + 1) 
+    I = int(1.5 * B) 
+    return np.linspace(0, 1, min(B + 1, 2**11 + 1)), np.linspace(0, 1, I + 1) 
 
 
 def compute_p(B, bc, f_source_str):
@@ -238,7 +235,6 @@ def get_jump(u, step):
     grad_jump_right = grad["i"] - grad["i+1"]
 
     norm = np.linalg.norm(np.vstack((grad_jump_left, grad_jump_right)).transpose(), axis=1) 
-    print("norm for jump", norm)
     return norm
 
 
