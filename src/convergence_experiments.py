@@ -98,9 +98,7 @@ def test_frequency(max_iter):
         
         error_est, _ = error_estimator(solution, mesh)
         error_ext = energy(solution, mesh, source_func[1], source_func[2], bc)
-        print("freq", freq)
         eff = count_effectivity(freq, error_est, error_ext)
-        print("eff", eff)
         prev_freq = freq
         if eff - percent > 0: 
             high = freq
@@ -108,10 +106,6 @@ def test_frequency(max_iter):
         else:
             low = freq
             freq = (freq + high) / 2
-        
-        # if int(freq) == int(prev_freq):
-        #     print("Frequency found:", freq)
-        #     break
 
     return freq 
 
@@ -145,16 +139,6 @@ def test_frequency_eff(max_iter):
         eff = count_effectivity(freq, error_est, error_ext)
         print("eff", eff)
         freq += 1
-        # if eff - percent > 0: 
-        #     high = freq
-        #     freq = (low + freq) / 2
-        # else:
-        #     low = freq
-        #     freq = (freq + high) / 2
-        
-        # if int(freq) == int(prev_freq):
-        #     print("Frequency found:", freq)
-        #     break
 
     return freq 
 
@@ -162,13 +146,11 @@ def test_frequency_eff(max_iter):
 if __name__ == '__main__':
     tolerance = 1e-2
     max_iter = 16
-    # file_nn = 'experiments/amr-data-nn.txt'
-    # file_explicit = 'experiments/amr-data-explicit.txt'
-    # file_recovery = 'experiments/amr-data-recovery.txt'
-    # for i in range(10): 
-    #     print(f"--------------------- Iteration {i} ---------------------")
-    #     convergence_experiments(tolerance, max_iter, file_nn, file_explicit, file_recovery)
+    file_nn = 'experiments/amr-data-nn.txt'
+    file_explicit = 'experiments/amr-data-explicit.txt'
+    file_recovery = 'experiments/amr-data-recovery.txt'
+    for i in range(10): 
+        print(f"--------------------- Iteration {i} ---------------------")
+        convergence_experiments(tolerance, max_iter, file_nn, file_explicit, file_recovery)
 
-    # # could be changed to pass the text file as argument
-    # # convergence_plots(file_nn, file_explicit, file_recovery)
-    test_frequency_eff(max_iter)
+    convergence_plots(file_nn, file_explicit, file_recovery)
