@@ -1,5 +1,5 @@
 fenics
-dolfinx==0.6.0
+dolfinx
 mpich 
 pyvista 
 scikit-learn 
