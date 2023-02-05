@@ -22,6 +22,7 @@ def plot_refinement(x, exact, meshes, solutions, est_global_errors, ex_global_er
     plt.figure(figsize=(15, 10))
     ax1 = plt.subplot(211)
     plt.plot(x, exact, lw=6, zorder=0)
+    plt.ylabel('u')
     plt.grid()
     
     iter = 0
@@ -39,13 +40,15 @@ def plot_refinement(x, exact, meshes, solutions, est_global_errors, ex_global_er
         iter += 1
     
     if color:
-        plt.colorbar(ax2.collections[0], location='bottom', shrink=0.7)
+        plt.colorbar(ax2.collections[0], location='bottom', shrink=0.7, label='Density of Points')
     
     plt.grid()
     ax1.scatter(meshes[iter], solutions[iter], s=5, color='r')
     plt.gca().set_yticks(np.arange(1, iter + 1))
     plt.gca().set_yticklabels([f"Iter: {i + 1}, Elements: {N_elements[i]}" for i in range(iter)])
     plt.tight_layout()
+    plt.xlabel('x')
+    plt.legend()
     plt.savefig(f"plots/refinement_plot_{plot_title}")        
 
 

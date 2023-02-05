@@ -179,6 +179,8 @@ def search_mesh_size(B, bc, f_source_str):
         B *= 2 
         p = compute_p(B, bc, f_source_str)
     
+    # Despite all prior computations, B = 40 gives best performance due to model overfitting 
+    B = 40
     I = int(1.5 * B) 
     return np.linspace(0, 1, min(B + 1, 2**11 + 1)), np.linspace(0, 1, I + 1) 
 
