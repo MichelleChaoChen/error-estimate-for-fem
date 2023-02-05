@@ -14,17 +14,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Login to GitHub Container Registry
-        uses: docker/login-action@v1 
-        with:
-          registry: ghcr.io
-          username: ${{ github.repository_owner }}
-          password: ${{ secrets.GITHUB_TOKEN }}
       - name: Pre-build image and build documentation in dev container
         uses: devcontainers/ci@v0.2
         with:
           imageName: ghcr.io/MichelleChaoChen/example-devcontainer
-          runCmd: cd docs && make html
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v3.0.0
       - name: Upload GitHub Pages artifact
