@@ -34,6 +34,7 @@ RUN sudo apt-get update && \
 RUN ~/miniconda3/bin/conda install -y -c conda-forge cudatoolkit=11.2 cudnn=8.1.0 fenics-dolfinx mpich pyvista scikit-learn matplotlib && \
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$CONDA_PREFIX/lib/ && \
     python3 -m pip install tensorflow keras_tuner pandas sphinx sphinx-rtd-theme
-
 RUN echo "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$CONDA_PREFIX/lib/" >> ~/.bashrc
+RUN sudo apt-get install ffmpeg libsm6 libxext6  -y
+RUN sudo apt install libgl1-mesa-glx xvfb -y
 ENV SHELL /bin/bash
